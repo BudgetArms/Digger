@@ -7,6 +7,11 @@ message("\nGame CMake")
 
 add_executable(${PROJECT_NAME}
 	"Main.cpp"
+    "Base/SoundEvents.h"
+
+
+
+
 )
  
 
@@ -21,7 +26,6 @@ target_compile_options(${PROJECT_NAME} PRIVATE
 
 
 target_link_libraries(${PROJECT_NAME} PUBLIC ${ENGINE_NAME})
-#target_include_directories(${ENGINE_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 
 if(WIN32)

@@ -68,6 +68,8 @@
 
 // Game Includes
 
+#include "Base/SoundEvents.h"
+
 
 
 
@@ -79,6 +81,9 @@ namespace fs = std::filesystem;
 using namespace bae;
 
 void Start();
+void LoadStart();
+void LoadSounds();
+
 
 int main(int, char* [])
 {
@@ -132,6 +137,10 @@ void Start()
 {
     auto& scene = SceneManager::GetInstance().CreateScene("BudgetArmsEngine");
 
+    LoadSounds();
+    LoadStart();
+
+
     auto background = std::make_shared<GameObject>("Background");
     background->AddComponent<TextureComponent>(*background, "Textures/background.tga");
     scene.Add(background);
@@ -148,13 +157,51 @@ void Start()
     auto fpsCounter = std::make_shared<GameObject>("Fps Counter");
     fpsCounter->AddComponent<FpsTextComponent>(*fpsCounter, fontSmall, SDL_Color(255, 255, 255, 255));
 
+    scene.m_bIsEnabled = false;
+
+
+    auto& fpsScene = SceneManager::GetInstance().CreateScene("FpsCounterScene");
     SDL_Window* window = Renderer::GetInstance().GetSDLWindow();
     int width, height;
     SDL_GetWindowSize(window, &width, &height);
     fpsCounter->SetWorldLocation({ width, 0, 0 });
     fpsCounter->AddLocation({ -75, 5, 0 });
 
-    scene.Add(fpsCounter);
+    fpsScene.Add(fpsCounter);
+
+
+}
+
+
+void LoadSounds()
+{
+    namespace gs = Game::Sounds;
+
+    bae::ServiceLocator::RegisterSoundSystem(std::make_unique<bae::SdlSoundSystem>());
+    auto soundSystem = &bae::ServiceLocator::GetSoundSystem();
+
+    // Sound files not made yet
+    gs::g_sSoundEvents =
+    {
+        { gs::SoundEvents::GameplayMusic,       soundSystem->LoadSound("Resources/Sounds/GameplayMusic.wav") },
+        //{ gs::SoundEvents::CollectedEmerald,    soundSystem->LoadSound("Resources/Sounds/.wav") },
+        //{ gs::SoundEvents::GoldBagCountdown,    soundSystem->LoadSound("Resources/Sounds/.wav") },
+        //{ gs::SoundEvents::GoldBagFalling,      soundSystem->LoadSound("Resources/Sounds/.wav") },
+        //{ gs::SoundEvents::PlayerHit,           soundSystem->LoadSound("Resources/Sounds/.wav") },
+        { gs::SoundEvents::PlayerDeath,         soundSystem->LoadSound("Resources/Sounds/PlayerDeathSound.wav") },
+        { gs::SoundEvents::PlayerDeathMusic,    soundSystem->LoadSound("Resources/Sounds/DeadMusicSound.wav") },
+        //{ gs::SoundEvents::BallTravelingSound,  soundSystem->LoadSound("Resources/Sounds/.wav") },
+        //{ gs::SoundEvents::BallHitSound,        soundSystem->LoadSound("Resources/Sounds/.wav") },
+    };
+
+}
+
+void LoadStart()
+{
+
+
+
+
 }
 
 
