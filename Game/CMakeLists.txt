@@ -8,6 +8,7 @@ message("\nGame CMake")
 add_executable(${PROJECT_NAME}
 	"Main.cpp"
     "Base/SoundEvents.h"
+    "Commands/TestSoundCommands.h"
 
 
 

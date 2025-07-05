@@ -36,6 +36,7 @@
 #include "Core/Renderer.h"
 #include "Core/Scene.h"
 #include "Core/SoundSystem.h"
+#include "Core/LoggingSoundSystem.h"
 #include "Core/SdlSoundSystem.h"
 #include "Core/ServiceLocator.h"
 #include "Components/TextComponent.h"
@@ -69,6 +70,7 @@
 // Game Includes
 
 #include "Base/SoundEvents.h"
+#include "Commands/TestSoundCommands.h"
 
 
 
@@ -83,6 +85,7 @@ using namespace bae;
 void Start();
 void LoadStart();
 void LoadSounds();
+void LoadTestSoundCommands();
 
 
 int main(int, char* [])
@@ -138,6 +141,7 @@ void Start()
     auto& scene = SceneManager::GetInstance().CreateScene("BudgetArmsEngine");
 
     LoadSounds();
+    LoadTestSoundCommands();
     LoadStart();
 
 
@@ -178,6 +182,7 @@ void LoadSounds()
     namespace gs = Game::Sounds;
 
     bae::ServiceLocator::RegisterSoundSystem(std::make_unique<bae::SdlSoundSystem>());
+    bae::ServiceLocator::RegisterSoundSystem(std::make_unique<bae::LoggingSoundSystem>(std::make_unique<bae::SdlSoundSystem>()));
     auto soundSystem = &bae::ServiceLocator::GetSoundSystem();
 
     // Sound files not made yet
@@ -188,11 +193,48 @@ void LoadSounds()
         //{ gs::SoundEvents::GoldBagCountdown,    soundSystem->LoadSound("Resources/Sounds/.wav") },
         //{ gs::SoundEvents::GoldBagFalling,      soundSystem->LoadSound("Resources/Sounds/.wav") },
         //{ gs::SoundEvents::PlayerHit,           soundSystem->LoadSound("Resources/Sounds/.wav") },
-        { gs::SoundEvents::PlayerDeath,         soundSystem->LoadSound("Resources/Sounds/PlayerDeathSound.wav") },
-        { gs::SoundEvents::PlayerDeathMusic,    soundSystem->LoadSound("Resources/Sounds/DeadMusicSound.wav") },
+        { gs::SoundEvents::PlayerDeath,         soundSystem->LoadSound("Resources/Sounds/PlayerDeath.wav") },
+        { gs::SoundEvents::PlayerDeathLong,     soundSystem->LoadSound("Resources/Sounds/PlayerDeathLong.wav") },
         //{ gs::SoundEvents::BallTravelingSound,  soundSystem->LoadSound("Resources/Sounds/.wav") },
         //{ gs::SoundEvents::BallHitSound,        soundSystem->LoadSound("Resources/Sounds/.wav") },
     };
+
+}
+
+
+void LoadTestSoundCommands()
+{
+    namespace gs = Game::Sounds;
+
+    auto& keyboard = InputManager::GetInstance().GetKeyboard();
+
+
+    // Sound commands
+    std::unique_ptr<gs::TestSoundCommand> soundCommand = nullptr;
+    soundCommand = std::make_unique<gs::TestPlaySoundCommand>(Game::Sounds::SoundEvents::GameplayMusic);
+    keyboard.AddKeyboardCommands(std::move(soundCommand), SDLK_1, bae::InputManager::ButtonState::Down);
+
+    soundCommand = std::make_unique<gs::TestPlaySoundCommand>(Game::Sounds::SoundEvents::PlayerDeathLong);
+    keyboard.AddKeyboardCommands(std::move(soundCommand), SDLK_2, bae::InputManager::ButtonState::Down);
+
+    soundCommand = std::make_unique<gs::TestTogglePauseSoundCommand>(Game::Sounds::SoundEvents::PlayerDeathLong);
+    keyboard.AddKeyboardCommands(std::move(soundCommand), SDLK_3, bae::InputManager::ButtonState::Down);
+
+    soundCommand = std::make_unique<gs::TestToggleMuteSoundCommand>(Game::Sounds::SoundEvents::PlayerDeathLong);
+    keyboard.AddKeyboardCommands(std::move(soundCommand), SDLK_4, bae::InputManager::ButtonState::Down);
+
+
+    // All Sound commands
+    std::unique_ptr<gs::TestAllSoundsCommand> allSoundsCommand = nullptr;
+    allSoundsCommand = std::make_unique<gs::TestMuteAllSoundsCommand>();
+    keyboard.AddKeyboardCommands(std::move(allSoundsCommand), SDLK_5, bae::InputManager::ButtonState::Down);
+
+    allSoundsCommand = std::make_unique<gs::TestTogglePauseAllSoundsCommand>();
+    keyboard.AddKeyboardCommands(std::move(allSoundsCommand), SDLK_6, bae::InputManager::ButtonState::Down);
+
+    allSoundsCommand = std::make_unique<gs::TestToggleMuteAllSoundsCommand>();
+    keyboard.AddKeyboardCommands(std::move(allSoundsCommand), SDLK_7, bae::InputManager::ButtonState::Down);
+
 
 }
 

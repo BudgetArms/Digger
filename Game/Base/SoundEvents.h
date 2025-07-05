@@ -14,7 +14,7 @@ namespace Game::Sounds
         GoldBagFalling,
         PlayerHit,
         PlayerDeath,
-        PlayerDeathMusic,
+        PlayerDeathLong,
         BallTravelingSound,
         BallHitSound,
     };
