@@ -3,6 +3,8 @@
 
 #include <unordered_map>
 
+#include "Core/SoundSystem.h"
+
 
 namespace Game::Sounds
 {
@@ -20,19 +22,17 @@ namespace Game::Sounds
     };
 
 
-    static std::unordered_map<SoundEvents, int> g_sSoundEvents;
+    static std::unordered_map<SoundEvents, bae::SoundID> g_sSoundEvents;
 
     // gives warning if not used
 #pragma warning (push)
 #pragma warning(disable : 4505)
 
-    static int GetSoundId(SoundEvents event)
+    static bae::SoundID GetSoundId(SoundEvents event)
     {
         auto it = g_sSoundEvents.find(event);
-
-        // sound not found
         if (it == g_sSoundEvents.end())
-            return -1;
+            return bae::SoundID{ .ID = -1 };
 
         return it->second;
     }

@@ -11,326 +11,170 @@
 namespace Game::Sounds
 {
 
-    class TestSoundCommand : public bae::Command
-    {
-    public:
-        TestSoundCommand(Game::Sounds::SoundEvents sound) :
-            bae::Command(),
-            m_SoundId{ Game::Sounds::GetSoundId(sound) }
-        {
-        };
-
-        virtual ~TestSoundCommand() = default;
-
-        TestSoundCommand(const TestSoundCommand& other) = delete;
-        TestSoundCommand(TestSoundCommand&& other) = delete;
-        TestSoundCommand& operator=(const TestSoundCommand& other) = delete;
-        TestSoundCommand& operator=(TestSoundCommand&& other) = delete;
-
-
-        virtual void Execute() override = 0;
-
-
-    protected:
-        int m_SoundId;
-
-
-    };
-
-    class TestAllSoundsCommand : public bae::Command
-    {
-    public:
-        TestAllSoundsCommand() :
-            bae::Command()
-        {
-        };
-
-        virtual ~TestAllSoundsCommand() = default;
-
-        TestAllSoundsCommand(const TestAllSoundsCommand& other) = delete;
-        TestAllSoundsCommand(TestAllSoundsCommand&& other) = delete;
-        TestAllSoundsCommand& operator=(const TestAllSoundsCommand& other) = delete;
-        TestAllSoundsCommand& operator=(TestAllSoundsCommand&& other) = delete;
-
-
-        virtual void Execute() override = 0;
-
-
-    };
-
-
-    class TestPlaySoundCommand final : public Game::Sounds::TestSoundCommand
-    {
-    public:
-        TestPlaySoundCommand(Game::Sounds::SoundEvents sound) :
-            Game::Sounds::TestSoundCommand(sound)
-        {
-        };
-
-        virtual void Execute() override
-        {
-            auto& soundSystem = bae::ServiceLocator::GetSoundSystem();
-            soundSystem.Play(m_SoundId, 0.5f);
-        }
-    };
-
-    class TestStopSoundCommand final : public Game::Sounds::TestSoundCommand
-    {
-    public:
-        TestStopSoundCommand(Game::Sounds::SoundEvents sound) :
-            Game::Sounds::TestSoundCommand(sound)
-        {
-        };
-
-        virtual void Execute() override
-        {
-            auto& soundSystem = bae::ServiceLocator::GetSoundSystem();
-            soundSystem.Resume(m_SoundId);
-        }
-    };
-
-    class TestResumeSoundCommand final : public Game::Sounds::TestSoundCommand
-    {
-    public:
-        TestResumeSoundCommand(Game::Sounds::SoundEvents sound) :
-            Game::Sounds::TestSoundCommand(sound)
-        {
-        };
-
-        virtual void Execute() override
-        {
-            auto& soundSystem = bae::ServiceLocator::GetSoundSystem();
-            soundSystem.Resume(m_SoundId);
-        }
-    };
-
-    class TestPauseSoundCommand final : public Game::Sounds::TestSoundCommand
-    {
-    public:
-        TestPauseSoundCommand(Game::Sounds::SoundEvents sound) :
-            Game::Sounds::TestSoundCommand(sound)
-        {
-        };
-
-        virtual void Execute() override
-        {
-            auto& soundSystem = bae::ServiceLocator::GetSoundSystem();
-            soundSystem.Pause(m_SoundId);
-        }
-    };
-
-    class TestMuteSoundCommand final : public Game::Sounds::TestSoundCommand
-    {
-    public:
-        TestMuteSoundCommand(Game::Sounds::SoundEvents sound) :
-            Game::Sounds::TestSoundCommand(sound)
-        {
-        };
-
-        virtual void Execute() override
-        {
-            auto& soundSystem = bae::ServiceLocator::GetSoundSystem();
-            soundSystem.Pause(m_SoundId);
-        }
-    };
-
-    class TestUnMuteSoundCommand final : public Game::Sounds::TestSoundCommand
-    {
-    public:
-        TestUnMuteSoundCommand(Game::Sounds::SoundEvents sound) :
-            Game::Sounds::TestSoundCommand(sound)
-        {
-        };
-
-        virtual void Execute() override
-        {
-            auto& soundSystem = bae::ServiceLocator::GetSoundSystem();
-            soundSystem.UnMute(m_SoundId);
-        }
-    };
-
-
-    class TestTogglePauseSoundCommand final : public Game::Sounds::TestSoundCommand
-    {
-    public:
-        TestTogglePauseSoundCommand(Game::Sounds::SoundEvents sound) :
-            Game::Sounds::TestSoundCommand(sound)
-        {
-        };
-
-        virtual void Execute() override
-        {
-            auto& soundSystem = bae::ServiceLocator::GetSoundSystem();
-            if (m_bIsPaused)
-                soundSystem.Resume(m_SoundId);
-            else
-                soundSystem.Pause(m_SoundId);
-
-            m_bIsPaused = !m_bIsPaused;
-        }
-
-
-    private:
-        bool m_bIsPaused{ false };
-
-
-    };
-
-    class TestToggleMuteSoundCommand final : public Game::Sounds::TestSoundCommand
-    {
-    public:
-        TestToggleMuteSoundCommand(Game::Sounds::SoundEvents sound) :
-            Game::Sounds::TestSoundCommand(sound)
-        {
-        };
-
-        virtual void Execute() override
-        {
-            auto& soundSystem = bae::ServiceLocator::GetSoundSystem();
-            if (m_bIsMuted)
-                soundSystem.UnMute(m_SoundId);
-            else
-                soundSystem.Mute(m_SoundId);
-
-            m_bIsMuted = !m_bIsMuted;
-        }
-
-
-    private:
-        bool m_bIsMuted{ false };
-
-
-    };
-
-
-
-
-    class TestStopAllSoundsCommand final : public Game::Sounds::TestAllSoundsCommand
-    {
-    public:
-        TestStopAllSoundsCommand() :
-            Game::Sounds::TestAllSoundsCommand()
-        {
-        };
-
-        virtual void Execute() override
-        {
-            auto& soundSystem = bae::ServiceLocator::GetSoundSystem();
-            soundSystem.StopAllSounds();
-        }
-    };
-
-    class TestResumeAllSoundsCommand final : public Game::Sounds::TestAllSoundsCommand
-    {
-    public:
-        TestResumeAllSoundsCommand() :
-            Game::Sounds::TestAllSoundsCommand()
-        {
-        };
-
-        virtual void Execute() override
-        {
-            auto& soundSystem = bae::ServiceLocator::GetSoundSystem();
-            soundSystem.ResumeAllSounds();
-        }
-    };
-
-    class TestPauseAllSoundsCommand final : public Game::Sounds::TestAllSoundsCommand
-    {
-    public:
-        TestPauseAllSoundsCommand() :
-            Game::Sounds::TestAllSoundsCommand()
-        {
-        };
-
-        virtual void Execute() override
-        {
-            auto& soundSystem = bae::ServiceLocator::GetSoundSystem();
-            soundSystem.PauseAllSounds();
-        }
-    };
-
-    class TestMuteAllSoundsCommand final : public Game::Sounds::TestAllSoundsCommand
-    {
-    public:
-        TestMuteAllSoundsCommand() :
-            Game::Sounds::TestAllSoundsCommand()
-        {
-        };
-
-        virtual void Execute() override
-        {
-            auto& soundSystem = bae::ServiceLocator::GetSoundSystem();
-            soundSystem.MuteAllSounds();
-        }
-    };
-
-    class TestUnMuteAllSoundsCommand final : public Game::Sounds::TestAllSoundsCommand
-    {
-    public:
-        TestUnMuteAllSoundsCommand() :
-            Game::Sounds::TestAllSoundsCommand()
-        {
-        };
-
-        virtual void Execute() override
-        {
-            auto& soundSystem = bae::ServiceLocator::GetSoundSystem();
-            soundSystem.UnMuteAllSounds();
-        }
-    };
-
-
-    class TestTogglePauseAllSoundsCommand final : public Game::Sounds::TestAllSoundsCommand
-    {
-    public:
-        TestTogglePauseAllSoundsCommand() :
-            Game::Sounds::TestAllSoundsCommand()
-        {
-        };
-
-        virtual void Execute() override
-        {
-            auto& soundSystem = bae::ServiceLocator::GetSoundSystem();
-            if (m_bIsPaused)
-                soundSystem.ResumeAllSounds();
-            else
-                soundSystem.PauseAllSounds();
-
-            m_bIsPaused = !m_bIsPaused;
-        }
-
-
-    private:
-        bool m_bIsPaused{ false };
-
-
-    };
-
-    class TestToggleMuteAllSoundsCommand final : public Game::Sounds::TestAllSoundsCommand
-    {
-    public:
-        TestToggleMuteAllSoundsCommand() :
-            Game::Sounds::TestAllSoundsCommand()
-        {
-        };
-
-        virtual void Execute() override
-        {
-            auto& soundSystem = bae::ServiceLocator::GetSoundSystem();
-            if (m_bIsMuted)
-                soundSystem.UnMuteAllSounds();
-            else
-                soundSystem.MuteAllSounds();
-
-            m_bIsMuted = !m_bIsMuted;
-        }
-
-    private:
-        bool m_bIsMuted{ false };
-
-
-    };
+	enum class TestSoundEvents
+	{
+		Stop,
+		Resume,
+		Pause,
+		Mute,
+		UnMute,
+		SetVolume,
+		TogglePause,
+		ToggleMute,
+
+		//PlayAll,
+		StopAll,
+		ResumeAll,
+		PauseAll,
+		MuteAll,
+		UnMuteAll,
+		SetVolumeAll,
+		TogglePauseAll,
+		ToggleMuteAll,
+	};
+
+
+	class TestSoundCommand : public bae::Command
+	{
+	public:
+		TestSoundCommand(TestSoundEvents soundEvent, bae::ActiveSoundID activeSoundId = bae::ActiveSoundID(-1), float volume = 1.f) :
+			bae::Command(),
+			m_TestEvent{ soundEvent },
+			m_ActiveSoundId{ activeSoundId },
+			m_Volume{ volume }
+		{
+		};
+
+		virtual ~TestSoundCommand() = default;
+
+		TestSoundCommand(const TestSoundCommand& other) = delete;
+		TestSoundCommand(TestSoundCommand&& other) = delete;
+		TestSoundCommand& operator=(const TestSoundCommand& other) = delete;
+		TestSoundCommand& operator=(TestSoundCommand&& other) = delete;
+
+
+		virtual void Execute() override
+		{
+			auto& soundSystem = bae::ServiceLocator::GetSoundSystem();
+
+			switch (m_TestEvent)
+			{
+				case Game::Sounds::TestSoundEvents::Stop:
+					soundSystem.Stop(m_ActiveSoundId);
+					break;
+				case Game::Sounds::TestSoundEvents::Resume:
+					soundSystem.Resume(m_ActiveSoundId);
+					break;
+				case Game::Sounds::TestSoundEvents::Pause:
+					soundSystem.Pause(m_ActiveSoundId);
+					break;
+				case Game::Sounds::TestSoundEvents::Mute:
+					soundSystem.Mute(m_ActiveSoundId);
+					break;
+				case Game::Sounds::TestSoundEvents::UnMute:
+					soundSystem.UnMute(m_ActiveSoundId);
+					break;
+				case Game::Sounds::TestSoundEvents::SetVolume:
+					soundSystem.SetVolume(m_ActiveSoundId, m_Volume);
+					break;
+				case Game::Sounds::TestSoundEvents::TogglePause:
+					if (soundSystem.IsPaused(m_ActiveSoundId))
+						soundSystem.Resume(m_ActiveSoundId);
+					else
+						soundSystem.Pause(m_ActiveSoundId);
+					break;
+				case Game::Sounds::TestSoundEvents::ToggleMute:
+					if (soundSystem.IsMuted(m_ActiveSoundId))
+						soundSystem.UnMute(m_ActiveSoundId);
+					else
+						soundSystem.Mute(m_ActiveSoundId);
+					break;
+
+				case Game::Sounds::TestSoundEvents::StopAll:
+					soundSystem.StopAllSounds();
+					break;
+				case Game::Sounds::TestSoundEvents::ResumeAll:
+					soundSystem.ResumeAllSounds();
+					break;
+				case Game::Sounds::TestSoundEvents::PauseAll:
+					soundSystem.PauseAllSounds();
+					break;
+				case Game::Sounds::TestSoundEvents::MuteAll:
+					soundSystem.MuteAllSounds();
+					break;
+				case Game::Sounds::TestSoundEvents::UnMuteAll:
+					soundSystem.UnMuteAllSounds();
+					break;
+				case Game::Sounds::TestSoundEvents::SetVolumeAll:
+					soundSystem.SetVolumeAllSounds(m_Volume);
+					break;
+				case Game::Sounds::TestSoundEvents::TogglePauseAll:
+					if (m_bAreAllSoundsPaused)
+						soundSystem.ResumeAllSounds();
+					else
+						soundSystem.PauseAllSounds();
+
+					m_bAreAllSoundsPaused = !m_bAreAllSoundsPaused;
+					break;
+				case Game::Sounds::TestSoundEvents::ToggleMuteAll:
+					if (m_bAreAllSoundsMuted)
+						soundSystem.UnMuteAllSounds();
+					else
+						soundSystem.MuteAllSounds();
+
+					m_bAreAllSoundsMuted = !m_bAreAllSoundsMuted;
+					break;
+				default:
+					break;
+			}
+
+		};
+
+
+	protected:
+		bae::ActiveSoundID m_ActiveSoundId;
+		TestSoundEvents m_TestEvent;
+
+		float m_Volume;
+
+		bool m_bAreAllSoundsPaused{ false };
+		bool m_bAreAllSoundsMuted{ false };
+
+
+	};
+
+	class TestPlaySoundCommand : public bae::Command
+	{
+	public:
+		TestPlaySoundCommand(bae::SoundID soundId, float volume = 1.f) :
+			bae::Command(),
+			m_SoundId{ soundId },
+			m_Volume{ volume }
+		{
+		};
+
+		virtual ~TestPlaySoundCommand() = default;
+
+		TestPlaySoundCommand(const TestPlaySoundCommand& other) = delete;
+		TestPlaySoundCommand(TestPlaySoundCommand&& other) = delete;
+		TestPlaySoundCommand& operator=(const TestPlaySoundCommand& other) = delete;
+		TestPlaySoundCommand& operator=(TestPlaySoundCommand&& other) = delete;
+
+
+		virtual void Execute() override
+		{
+			auto& soundSystem = bae::ServiceLocator::GetSoundSystem();
+			soundSystem.Play(m_SoundId, m_Volume);
+		};
+
+
+	protected:
+		bae::SoundID m_SoundId;
+		float m_Volume;
+
+
+	};
+
 
 
 }
