@@ -18,16 +18,16 @@ set(ENABLE_CONSOLE ON)
 
 
 if(ENABLE_STEAMWORKS AND NOT EMSCRIPTEN)
-    
-    message("Using Steamworks")
+	
+	message("Using Steamworks")
 
-    if(EXISTS "${STEAMWORKS_SDK_PATH}")
-        message(STATUS "Steamworks SDK found at: ${STEAMWORKS_SDK_PATH}")
-        set(STEAMWORKS_AVAILABLE TRUE)
-    else()
-        message(WARNING "Steamworks SDK not found at: ${STEAMWORKS_SDK_PATH}")
-        set(STEAMWORKS_AVAILABLE FALSE)
-    endif()
+	if(EXISTS "${STEAMWORKS_SDK_PATH}")
+		message(STATUS "Steamworks SDK found at: ${STEAMWORKS_SDK_PATH}")
+		set(STEAMWORKS_AVAILABLE TRUE)
+	else()
+		message(WARNING "Steamworks SDK not found at: ${STEAMWORKS_SDK_PATH}")
+		set(STEAMWORKS_AVAILABLE FALSE)
+	endif()
 
 endif()
 

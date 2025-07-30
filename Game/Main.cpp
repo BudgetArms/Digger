@@ -33,19 +33,11 @@
 #include "Core/BudgetEngine.h"
 #include "Core/GameObject.h"
 #include "Core/Renderer.h"
+#include "Core/RingBuffer.h"
 #include "Core/Scene.h"
-#include "Core/SoundSystem.h"
-#include "Core/LoggingSoundSystem.h"
-#include "Core/SdlSoundSystem.h"
 #include "Core/ServiceLocator.h"
 #include "Components/TextComponent.h"
 #include "Components/TextureComponent.h"
-
-
-#include "Core/RingBuffer.h"
-
-
-
 
 #include "Commands/Command.h"
 #include "Commands/MoveCommand.h"
@@ -59,6 +51,16 @@
 #include "Managers/ResourceManager.h"
 #include "Managers/SceneManager.h"
 
+#include "Sounds/SoundSystem.h"
+#include "Sounds/LoggingSoundSystem.h"
+#include "Sounds/SdlSoundSystem.h"
+#include "Sounds/SdlAudioClip.h"
+#include "Sounds/LoggingAudioClip.h"
+#include "Sounds/NullAudioClip.h"
+
+#include "Wrappers/Controller.h"
+#include "Wrappers/Keyboard.h"
+
 
 #ifdef STEAMWORKS_ENABLED
 
@@ -68,12 +70,9 @@
 
 #endif
 
-#include "Wrappers/Controller.h"
-#include "Wrappers/Keyboard.h"
 
 
 // Game Includes
-
 #include "Base/SoundEvents.h"
 #include "Commands/TestSoundCommands.h"
 
@@ -88,11 +87,11 @@ namespace fs = std::filesystem;
 using namespace bae;
 
 void Start();
-void LoadStartScene();
 void LoadSounds();
-void LoadTestSoundCommands();
+void LoadStartScene();
 void LoadDefaultScene();
 void LoadFpsCounterScene();
+void LoadTestSoundCommands();
 
 
 
@@ -148,12 +147,18 @@ int main(int, char* [])
 
 void Start()
 {
+	bae::ServiceLocator::RegisterAudioQueue<bae::SdlAudioClip>();
+	//bae::ServiceLocator::RegisterAudioQueue<bae::LoggingAudioClip<bae::SdlAudioClip>>();
+
+	bae::ServiceLocator::RegisterSoundSystem(std::make_unique<bae::SdlSoundSystem>());
+	//bae::ServiceLocator::RegisterSoundSystem(std::make_unique<bae::LoggingSoundSystem>(std::make_unique<bae::SdlSoundSystem>()));
+
 
 	LoadSounds();
-	LoadTestSoundCommands();
 	LoadStartScene();
 	LoadDefaultScene();
 	LoadFpsCounterScene();
+	LoadTestSoundCommands();
 
 
 }
@@ -163,8 +168,6 @@ void LoadSounds()
 {
 	namespace gs = Game::Sounds;
 
-	bae::ServiceLocator::RegisterSoundSystem(std::make_unique<bae::SdlSoundSystem>());
-	bae::ServiceLocator::RegisterSoundSystem(std::make_unique<bae::LoggingSoundSystem>(std::make_unique<bae::SdlSoundSystem>()));
 	auto soundSystem = &bae::ServiceLocator::GetSoundSystem();
 
 	// Sound files not made yet
@@ -180,6 +183,51 @@ void LoadSounds()
 		//{ gs::SoundEvents::BallTravelingSound,  soundSystem->LoadSound("Resources/Sounds/.wav") },
 		//{ gs::SoundEvents::BallHitSound,        soundSystem->LoadSound("Resources/Sounds/.wav") },
 	};
+
+}
+
+
+void LoadStartScene()
+{
+
+}
+
+
+void LoadDefaultScene()
+{
+	auto& scene = SceneManager::GetInstance().CreateScene("BudgetArmsEngine");
+
+	auto background = std::make_shared<GameObject>("Background");
+	background->AddComponent<TextureComponent>(*background, "Textures/background.tga");
+	scene.Add(background);
+
+	auto logo = std::make_shared<GameObject>("Logo");
+	logo->AddComponent<TextureComponent>(*logo, "Textures/logo.tga");
+	logo->SetLocalLocation({ 216, 180, 0 });
+	scene.Add(logo);
+
+
+}
+
+
+void LoadFpsCounterScene()
+{
+	auto& fpsScene = SceneManager::GetInstance().CreateScene("FpsCounterScene");
+
+	auto font = ResourceManager::GetInstance().LoadFont("Fonts/Lingua.otf", 36);
+	auto fontSmall = ResourceManager::GetInstance().LoadFont("Fonts/Lingua.otf", 18);
+
+	auto fpsCounter = std::make_shared<GameObject>("Fps Counter");
+	fpsCounter->AddComponent<FpsTextComponent>(*fpsCounter, fontSmall, SDL_Color(255, 255, 255, 255));
+
+	SDL_Window* window = Renderer::GetInstance().GetSDLWindow();
+	int width, height;
+	SDL_GetWindowSize(window, &width, &height);
+	fpsCounter->SetWorldLocation({ width, 0, 0 });
+	fpsCounter->AddLocation({ -75, 5, 0 });
+
+	fpsScene.Add(fpsCounter);
+
 
 }
 
@@ -247,47 +295,3 @@ void LoadTestSoundCommands()
 }
 
 
-
-void LoadStartScene()
-{
-
-}
-
-
-void LoadDefaultScene()
-{
-	auto& scene = SceneManager::GetInstance().CreateScene("BudgetArmsEngine");
-
-	auto background = std::make_shared<GameObject>("Background");
-	background->AddComponent<TextureComponent>(*background, "Textures/background.tga");
-	scene.Add(background);
-
-	auto logo = std::make_shared<GameObject>("Logo");
-	logo->AddComponent<TextureComponent>(*logo, "Textures/logo.tga");
-	logo->SetLocalLocation({ 216, 180, 0 });
-	scene.Add(logo);
-
-
-}
-
-
-void LoadFpsCounterScene()
-{
-	auto& fpsScene = SceneManager::GetInstance().CreateScene("FpsCounterScene");
-
-	auto font = ResourceManager::GetInstance().LoadFont("Fonts/Lingua.otf", 36);
-	auto fontSmall = ResourceManager::GetInstance().LoadFont("Fonts/Lingua.otf", 18);
-
-	auto fpsCounter = std::make_shared<GameObject>("Fps Counter");
-	fpsCounter->AddComponent<FpsTextComponent>(*fpsCounter, fontSmall, SDL_Color(255, 255, 255, 255));
-
-	SDL_Window* window = Renderer::GetInstance().GetSDLWindow();
-	int width, height;
-	SDL_GetWindowSize(window, &width, &height);
-	fpsCounter->SetWorldLocation({ width, 0, 0 });
-	fpsCounter->AddLocation({ -75, 5, 0 });
-
-	fpsScene.Add(fpsCounter);
-
-
-}

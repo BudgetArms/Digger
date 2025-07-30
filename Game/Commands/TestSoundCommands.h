@@ -22,7 +22,6 @@ namespace Game::Sounds
 		TogglePause,
 		ToggleMute,
 
-		//PlayAll,
 		StopAll,
 		ResumeAll,
 		PauseAll,
