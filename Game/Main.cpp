@@ -1,6 +1,4 @@
-﻿#pragma region Includes
-
-#if _DEBUG
+﻿#if _DEBUG
 #if __has_include(<vld.h>)
 #include <vld.h>
 #endif
@@ -16,6 +14,10 @@
 #include <unordered_map>
 #include <chrono>
 
+
+#pragma region BudgetArmsEngine Includes
+
+
 #include <glm.hpp>
 #include <SDL.h>
 #include <imgui.h>
@@ -29,7 +31,6 @@
 #endif
 
 
-// BudgetArmsEngine Includes
 #include "Core/BudgetEngine.h"
 #include "Core/GameObject.h"
 #include "Core/Renderer.h"
@@ -40,7 +41,7 @@
 #include "Components/TextureComponent.h"
 
 #include "Commands/Command.h"
-#include "Commands/MoveCommand.h"
+#include "Commands/GameActorCommand.h"
 
 #include "Components/Component.h"
 #include "Components/FpsCounterComponent.h"
@@ -60,6 +61,7 @@
 
 #include "Wrappers/Controller.h"
 #include "Wrappers/Keyboard.h"
+#include "Wrappers/Mouse.h"
 
 
 #ifdef STEAMWORKS_ENABLED
@@ -71,15 +73,29 @@
 #endif
 
 
+#pragma endregion
+
 
 // Game Includes
 #include "Base/SoundEvents.h"
+#include "Base/TerrainGridGraph.h"
+
+#include "Commands/TestGridCommands.h"
+#include "Commands/TestMoveCommands.h"
 #include "Commands/TestSoundCommands.h"
+#include "Commands/TestSpriteCommands.h"
+
+#include "Components/AIComponent.h"
+#include "Components/EntityManagerComponent.h"
+#include "Components/GridComponent.h"
+#include "Components/HitboxComponent.h"
 
 
-
-
-#pragma endregion
+#include "Entities/BonusComponent.h"
+#include "Entities/DiggerComponent.h"
+#include "Entities/EmeraldComponent.h"
+#include "Entities/GoldBagComponent.h"
+#include "Entities/NobbinComponent.h"
 
 
 
@@ -107,16 +123,18 @@ int main(int, char* [])
 	}
 #endif
 
+	bae::Utils::Window window{ "Digger", "./Resources/", 960, 612, false };
+
+
+
 #if __EMSCRIPTEN__
-	fs::path data_location = "";
+	window.resourceFolder = "";
 #else
-	fs::path resourcesFolder = "./Resources/";
 
+	if (!fs::exists(window.resourceFolder))
+		window.resourceFolder = "../Resources/";
 
-	if (!fs::exists(resourcesFolder))
-		resourcesFolder = "../Resources/";
-
-	if (!fs::exists(resourcesFolder))
+	if (!fs::exists(window.resourceFolder))
 	{
 		std::cout << "Resouces Folder Not Found" << '\n';
 		assert("Resouces Folder Not Found");
@@ -131,7 +149,7 @@ int main(int, char* [])
 #endif
 
 
-	BudgetEngine engine(resourcesFolder);
+	BudgetEngine engine(window);
 	engine.Run(Start);
 
 
@@ -139,7 +157,9 @@ int main(int, char* [])
 	SteamManager::GetInstance().Shutdown();
 #endif
 
+
 	std::cout << "\n\n";
+
 
 	return 0;
 }
@@ -147,16 +167,18 @@ int main(int, char* [])
 
 void Start()
 {
+	bae::ServiceLocator::RegisterSoundSystem(std::make_unique<bae::SdlSoundSystem>());
 	bae::ServiceLocator::RegisterAudioQueue<bae::SdlAudioClip>();
 	//bae::ServiceLocator::RegisterAudioQueue<bae::LoggingAudioClip<bae::SdlAudioClip>>();
 
-	bae::ServiceLocator::RegisterSoundSystem(std::make_unique<bae::SdlSoundSystem>());
+	//bae::ServiceLocator::RegisterSoundSystem(std::make_unique<bae::NullSoundSystem>());
+	//bae::ServiceLocator::RegisterSoundSystem(std::make_unique<bae::SdlSoundSystem>());
 	//bae::ServiceLocator::RegisterSoundSystem(std::make_unique<bae::LoggingSoundSystem>(std::make_unique<bae::SdlSoundSystem>()));
 
 
 	LoadSounds();
+	//LoadDefaultScene();
 	LoadStartScene();
-	LoadDefaultScene();
 	LoadFpsCounterScene();
 	LoadTestSoundCommands();
 
@@ -168,18 +190,18 @@ void LoadSounds()
 {
 	namespace gs = Game::Sounds;
 
-	auto soundSystem = &bae::ServiceLocator::GetSoundSystem();
+	auto& soundSystem = bae::ServiceLocator::GetSoundSystem();
 
 	// Sound files not made yet
 	gs::g_sSoundEvents =
 	{
-		{ gs::SoundEvents::GameplayMusic,       soundSystem->LoadSound("Resources/Sounds/GameplayMusic.wav") },
+		{ gs::SoundEvents::GameplayMusic,       soundSystem.LoadSound("Resources/Sounds/GameplayMusic.wav") },
 		//{ gs::SoundEvents::CollectedEmerald,    soundSystem->LoadSound("Resources/Sounds/.wav") },
 		//{ gs::SoundEvents::GoldBagCountdown,    soundSystem->LoadSound("Resources/Sounds/.wav") },
 		//{ gs::SoundEvents::GoldBagFalling,      soundSystem->LoadSound("Resources/Sounds/.wav") },
 		//{ gs::SoundEvents::PlayerHit,           soundSystem->LoadSound("Resources/Sounds/.wav") },
-		{ gs::SoundEvents::PlayerDeath,         soundSystem->LoadSound("Resources/Sounds/PlayerDeath.wav") },
-		{ gs::SoundEvents::PlayerDeathLong,     soundSystem->LoadSound("Resources/Sounds/PlayerDeathLong.wav") },
+		{ gs::SoundEvents::PlayerDeath,         soundSystem.LoadSound("Resources/Sounds/PlayerDeath.wav") },
+		{ gs::SoundEvents::PlayerDeathLong,     soundSystem.LoadSound("Resources/Sounds/PlayerDeathLong.wav") },
 		//{ gs::SoundEvents::BallTravelingSound,  soundSystem->LoadSound("Resources/Sounds/.wav") },
 		//{ gs::SoundEvents::BallHitSound,        soundSystem->LoadSound("Resources/Sounds/.wav") },
 	};
@@ -189,6 +211,131 @@ void LoadSounds()
 
 void LoadStartScene()
 {
+	auto& scene = SceneManager::GetInstance().CreateScene("GridScene");
+
+	auto gridObject = std::make_shared<GameObject>("Grid");
+	gridObject->SetWorldLocation({ 0, 54, 0 });
+
+	//gridObject->AddComponent<Game::GridComponent>(*gridObject, 16, 12, 40, false, false);
+	gridObject->AddComponent<Game::GridComponent>(*gridObject, 15, 10, glm::ivec2{ 60, 54 }, false, false);
+	auto pTerrainGridGraph = gridObject->GetComponent<Game::GridComponent>()->GetTerrainGridGraph(); ////////////////////
+	scene.Add(gridObject);
+
+	auto entityManager = std::make_shared<GameObject>("EntityManager");
+	entityManager->AddComponent<Game::Components::EntityManagerComponent>(*entityManager, &scene);
+	scene.Add(entityManager);
+
+	auto digger = std::make_shared<GameObject>("Digger");
+	digger->AddComponent<Game::Entities::DiggerComponent>(*digger);
+	digger->AddLocation({ 480, 576, 0 });
+	digger->SetWorldScale({ 3, 3 });
+	scene.Add(digger);
+
+	auto nobbin = std::make_shared<GameObject>("Nobbin");
+	nobbin->AddComponent<Game::Entities::NobbinComponent>(*nobbin);
+	nobbin->AddLocation({ 816, 90, 0 });
+	nobbin->SetWorldScale({ 3, 3 });
+	scene.Add(nobbin);
+
+	auto aiComp = nobbin->GetComponent<Game::Components::AIComponent>(); ///////
+	aiComp->m_TerrainGridGraph = pTerrainGridGraph; /////////////////
+	aiComp->SetPath({ 100, 400 });
+
+
+
+
+	auto emerald = std::make_shared<GameObject>("Emerald");
+	emerald->AddComponent<Game::Entities::EmeraldComponent>(*emerald);
+	emerald->AddLocation({ 300, 300, 0 });
+	emerald->SetWorldScale({ 3, 3 });
+	scene.Add(emerald);
+
+	auto goldBag = std::make_shared<GameObject>("GoldBag");
+	goldBag->AddComponent<Game::Entities::GoldBagComponent>(*goldBag);
+	goldBag->AddLocation({ 400, 300, 0 });
+	goldBag->SetWorldScale({ 3, 3 });
+	scene.Add(goldBag);
+
+	auto bonus = std::make_shared<GameObject>("Bonus");
+	bonus->AddComponent<Game::Entities::BonusComponent>(*bonus);
+	bonus->AddLocation({ 500, 300, 0 });
+	bonus->SetWorldScale({ 3, 3 });
+	scene.Add(bonus);
+
+
+
+
+	// Sprite Tests
+	auto& keyboard = bae::InputManager::GetInstance().GetKeyboard();
+	std::unique_ptr<Game::Commands::TestSpriteCommand> spriteCommand;
+
+	// Digger
+	spriteCommand = std::make_unique<Game::Commands::TestSpriteCommand>(*digger, Game::Commands::TestSpriteAction::PreviousSprite);
+	keyboard.AddKeyboardCommands(std::move(spriteCommand), SDLK_t, bae::InputManager::ButtonState::Down);
+
+	spriteCommand = std::make_unique<Game::Commands::TestSpriteCommand>(*digger, Game::Commands::TestSpriteAction::NextSprite);
+	keyboard.AddKeyboardCommands(std::move(spriteCommand), SDLK_y, bae::InputManager::ButtonState::Down);
+
+
+	// Nobbin
+	spriteCommand = std::make_unique<Game::Commands::TestSpriteCommand>(*nobbin, Game::Commands::TestSpriteAction::PreviousSprite);
+	keyboard.AddKeyboardCommands(std::move(spriteCommand), SDLK_g, bae::InputManager::ButtonState::Down);
+
+	spriteCommand = std::make_unique<Game::Commands::TestSpriteCommand>(*nobbin, Game::Commands::TestSpriteAction::NextSprite);
+	keyboard.AddKeyboardCommands(std::move(spriteCommand), SDLK_h, bae::InputManager::ButtonState::Down);
+
+
+	// GoldBag
+	spriteCommand = std::make_unique<Game::Commands::TestSpriteCommand>(*goldBag, Game::Commands::TestSpriteAction::PreviousSprite);
+	keyboard.AddKeyboardCommands(std::move(spriteCommand), SDLK_v, bae::InputManager::ButtonState::Down);
+
+	spriteCommand = std::make_unique<Game::Commands::TestSpriteCommand>(*goldBag, Game::Commands::TestSpriteAction::NextSprite);
+	keyboard.AddKeyboardCommands(std::move(spriteCommand), SDLK_n, bae::InputManager::ButtonState::Down);
+
+
+
+	InputManager::GetInstance().AddController(0);
+	InputManager::GetInstance().AddController(1);
+
+	auto* myController = InputManager::GetInstance().GetController(1);
+
+
+	// move player 1 (controller)
+	auto moveCommand = std::make_unique<Game::Commands::TestMoveCommand>(*digger, glm::vec2(0, 1), 200.f);
+	myController->AddControllerCommands(std::move(moveCommand), XINPUT_GAMEPAD_DPAD_DOWN, InputManager::ButtonState::Pressed);
+
+	moveCommand = std::make_unique<Game::Commands::TestMoveCommand>(*digger, glm::vec2(0, -1), 200.f);
+	myController->AddControllerCommands(std::move(moveCommand), XINPUT_GAMEPAD_DPAD_UP, InputManager::ButtonState::Pressed);
+
+	moveCommand = std::make_unique<Game::Commands::TestMoveCommand>(*digger, glm::vec2(-1, 0), 200.f);
+	myController->AddControllerCommands(std::move(moveCommand), XINPUT_GAMEPAD_DPAD_LEFT, InputManager::ButtonState::Pressed);
+
+	moveCommand = std::make_unique<Game::Commands::TestMoveCommand>(*digger, glm::vec2(1, 0), 200.f);
+	myController->AddControllerCommands(std::move(moveCommand), XINPUT_GAMEPAD_DPAD_RIGHT, InputManager::ButtonState::Pressed);
+
+
+	// move player 2 (keyboard)
+	moveCommand = std::make_unique<Game::Commands::TestMoveCommand>(*nobbin, glm::vec2(0, -1), 100.f);
+	keyboard.AddKeyboardCommands(std::move(moveCommand), SDLK_w, InputManager::ButtonState::Pressed);
+
+	moveCommand = std::make_unique<Game::Commands::TestMoveCommand>(*nobbin, glm::vec2(0, 1), 100.f);
+	keyboard.AddKeyboardCommands(std::move(moveCommand), SDLK_s, InputManager::ButtonState::Pressed);
+
+	moveCommand = std::make_unique<Game::Commands::TestMoveCommand>(*nobbin, glm::vec2(-1, 0), 100.f);
+	keyboard.AddKeyboardCommands(std::move(moveCommand), SDLK_a, InputManager::ButtonState::Pressed);
+
+	moveCommand = std::make_unique<Game::Commands::TestMoveCommand>(*nobbin, glm::vec2(1, 0), 100.f);
+	keyboard.AddKeyboardCommands(std::move(moveCommand), SDLK_d, InputManager::ButtonState::Pressed);
+
+
+
+	auto& mouse = bae::InputManager::GetInstance().GetMouse();
+
+	// TestGridCommand
+	auto setPathCommand = std::make_unique<Game::Commands::TestGridCommand>(*nobbin);
+	mouse.AddMouseCommands(std::move(setPathCommand), SDL_BUTTON_LEFT, InputManager::ButtonState::Pressed);
+
+
 
 }
 
@@ -203,7 +350,13 @@ void LoadDefaultScene()
 
 	auto logo = std::make_shared<GameObject>("Logo");
 	logo->AddComponent<TextureComponent>(*logo, "Textures/logo.tga");
-	logo->SetLocalLocation({ 216, 180, 0 });
+
+	SDL_Window* window = Renderer::GetInstance().GetSDLWindow();
+	int width, height;
+	SDL_GetWindowSize(window, &width, &height);
+
+	logo->SetWorldLocation({ width / 2.f, height / 2.f, 0 });
+	logo->GetComponent<TextureComponent>()->m_bIsCenteredAtPosition = true;
 	scene.Add(logo);
 
 
@@ -253,13 +406,14 @@ void LoadTestSoundCommands()
 	soundPlayCommands = std::make_unique<gs::TestPlaySoundCommand>(gs::GetSoundId(gs::SoundEvents::PlayerDeathLong));
 	keyboard.AddKeyboardCommands(std::move(soundPlayCommands), SDLK_1, bae::InputManager::ButtonState::Down);
 
-	// TogglePause 
+
+	// TogglePause
 	soundCommands = std::make_unique<gs::TestSoundCommand>(gs::TestSoundEvents::TogglePause, activeSoundId);
 	keyboard.AddKeyboardCommands(std::move(soundCommands), SDLK_2, bae::InputManager::ButtonState::Down);
 
-	// ToggleMute 
-	soundCommands = std::make_unique<gs::TestSoundCommand>(gs::TestSoundEvents::ToggleMute, activeSoundId);
-	keyboard.AddKeyboardCommands(std::move(soundCommands), SDLK_3, bae::InputManager::ButtonState::Down);
+	// ToggleMute
+	//soundCommands = std::make_unique<gs::TestSoundCommand>(gs::TestSoundEvents::ToggleMute, activeSoundId);
+	//keyboard.AddKeyboardCommands(std::move(soundCommands), SDLK_3, bae::InputManager::ButtonState::Down);
 
 
 	// Change Volume
@@ -291,7 +445,9 @@ void LoadTestSoundCommands()
 	soundCommands = std::make_unique<gs::TestSoundCommand>(gs::TestSoundEvents::ToggleMuteAll);
 	keyboard.AddKeyboardCommands(std::move(soundCommands), SDLK_0, bae::InputManager::ButtonState::Down);
 
+	soundCommands = std::make_unique<gs::TestSoundCommand>(gs::TestSoundEvents::Mute, activeSoundId);
+	keyboard.AddKeyboardCommands(std::move(soundCommands), SDLK_3, bae::InputManager::ButtonState::Down);
+
 
 }
-
 

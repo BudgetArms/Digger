@@ -7,8 +7,36 @@ message("\nGame CMake")
 
 add_executable(${PROJECT_NAME}
 	"Main.cpp"
+
 	"Base/SoundEvents.h"
+	"Base/TerrainCostCalculator.h" 
+	"Base/TerrainTypes.h" 
+	"Base/TerrainGraphNode.h" 
+	"Base/TerrainGridGraph.h"				"Base/TerrainGridGraph.cpp"
+
+
+	"Commands/TestGridCommands.h"
 	"Commands/TestSoundCommands.h"
+	"Commands/TestSpriteCommands.h"
+	"Commands/TestMoveCommands.h"
+
+	"Components/AIComponent.h"				"Components/AIComponent.cpp" 
+	"Components/HealthComponent.h"			"Components/HealthComponent.cpp"
+	"Components/GridComponent.h"			"Components/GridComponent.cpp"
+	"Components/HitboxComponent.h"			"Components/HitboxComponent.cpp"
+	"Components/EntityManagerComponent.h"	"Components/EntityManagerComponent.cpp"
+	"Components/PickupComponent.h"			"Components/PickupComponent.cpp"
+	"Components/ScoreComponent.h"			"Components/ScoreComponent.cpp"
+
+
+	"Entities/BonusComponent.h"				"Entities/BonusComponent.cpp"
+	"Entities/DiggerComponent.h"			"Entities/DiggerComponent.cpp"
+				
+	"Entities/EmeraldComponent.h"			"Entities/EmeraldComponent.cpp"
+	"Entities/GoldBagComponent.h"			"Entities/GoldBagComponent.cpp" 
+	"Entities/NobbinComponent.h"			"Entities/NobbinComponent.cpp"
+	
+
 )
  
 
