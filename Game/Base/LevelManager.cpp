@@ -7,7 +7,7 @@
 #include "Core/HelperFunctions.h"
 
 #include "../Base/Level.h"
-#include "../Components/EntityManagerComponent.h"
+#include "../Base/EntityManager.h"
 #include "../Components/GridComponent.h"
 #include "../Entities/BonusComponent.h"
 #include "../Entities/DiggerComponent.h"
@@ -17,7 +17,7 @@
 #include "../Entities/NobbinSpawnerComponent.h"
 
 
-using namespace Game::Level;
+using namespace Game::Managers;
 using njson = nlohmann::json;
 namespace fs = std::filesystem;
 
@@ -31,7 +31,6 @@ LevelManager::LevelManager() :
 LevelManager::~LevelManager()
 {
 }
-
 
 void LevelManager::LoadLevel(const fs::path& filePath)
 {
@@ -49,12 +48,12 @@ void LevelManager::LoadLevel(const fs::path& filePath)
 	}
 
 	njson json;
-	std::unique_ptr<Level> uLevel;
+	std::unique_ptr<Game::Level::Level> uLevel;
 
 	try
 	{
 		file >> json;
-		uLevel = std::make_unique<Level>(json.get<Level>());
+		uLevel = std::make_unique<Game::Level::Level>(json.get<Game::Level::Level>());
 	}
 	catch (const std::exception& e)
 	{
@@ -112,7 +111,7 @@ bool LevelManager::SetCurrentLevel(int levelNumber)
 
 }
 
-Level* LevelManager::GetLevel(int levelNumber) const
+Game::Level::Level* LevelManager::GetLevel(int levelNumber) const
 {
 	auto levelIt = m_Levels.find(levelNumber);
 	if (levelIt == m_Levels.end())
@@ -122,56 +121,50 @@ Level* LevelManager::GetLevel(int levelNumber) const
 }
 
 
-void LevelManager::SpawnLevelInScene(bae::Scene& scene)
+void LevelManager::SpawnLevel()
 {
 	if (!m_pCurrentLevel)
 		return;
 
-	ClearScene(scene);
-
-	m_pScene = &scene;
-
-
-	auto uEntityManager = CreateEntityManager(*m_pScene);
-	scene.Add(uEntityManager);
+	ClearScene();
 
 
 	auto uGrid = CreateGrid(m_pCurrentLevel->grid);
 	m_pGridComponent = uGrid->GetComponent<Game::Components::GridComponent>();
-	scene.Add(uGrid);
+	m_pScene->Add(uGrid);
 
 
 	auto player = CreatePlayer(m_pCurrentLevel->playerStart);
-	scene.Add(player);
+	m_pScene->Add(player);
 	m_pPlayer = player.get();
 
 
-	for (const NobbinSpawner& nobbinSpawner : m_pCurrentLevel->nobbinSpawners)
+	for (const Game::Level::NobbinSpawner& nobbinSpawner : m_pCurrentLevel->nobbinSpawners)
 	{
-		auto uNobbinSpawner = CreateNobbinSpawner(nobbinSpawner, scene);
-		scene.Add(uNobbinSpawner);
+		auto uNobbinSpawner = CreateNobbinSpawner(nobbinSpawner);
+		m_pScene->Add(uNobbinSpawner);
 	}
 
-	for (const Emerald& emerald : m_pCurrentLevel->emeralds)
+	for (const Game::Level::Emerald& emerald : m_pCurrentLevel->emeralds)
 	{
 		auto uEmerald = CreateEmerald(emerald);
-		scene.Add(uEmerald);
+		m_pScene->Add(uEmerald);
 	}
 
-	for (const GoldBag& goldBag : m_pCurrentLevel->goldBags)
+	for (const Game::Level::GoldBag& goldBag : m_pCurrentLevel->goldBags)
 	{
 		auto uGoldBag = CreateGoldBag(goldBag);
-		scene.Add(uGoldBag);
+		m_pScene->Add(uGoldBag);
 	}
 
 
-	std::cout << "Spawned level " << m_CurrentLevelNumber << " in scene " << scene.GetName() << '\n';
+	std::cout << "Spawned level " << m_CurrentLevelNumber << " in scene " << m_pScene->GetName() << '\n';
 
 }
 
-void LevelManager::ClearScene(bae::Scene& scene)
+void LevelManager::ClearScene()
 {
-	scene.RemoveAll();
+	m_pScene->RemoveAll();
 }
 
 
@@ -199,18 +192,18 @@ bool LevelManager::IsLevelComplete() const
 void LevelManager::ResetLevel()
 {
 	// clear scene and load level
-	SpawnLevelInScene(*m_pScene);
+	SpawnLevel();
 }
 
 void LevelManager::ReloadLevel()
 {
-	m_pEntityManagerCompenent->RemoveAllNobbins();
-	m_pEntityManagerCompenent->RemoveAllPlayers();
+	EntityManager::GetInstance().RemoveAllNobbins();
+	EntityManager::GetInstance().RemoveAllPlayers();
 
 
-	for (const NobbinSpawner& nobbinSpawner : m_pCurrentLevel->nobbinSpawners)
+	for (const Game::Level::NobbinSpawner& nobbinSpawner : m_pCurrentLevel->nobbinSpawners)
 	{
-		auto uNobbinSpawner = CreateNobbinSpawner(nobbinSpawner, *m_pScene);
+		auto uNobbinSpawner = CreateNobbinSpawner(nobbinSpawner);
 		m_pScene->Add(uNobbinSpawner);
 	}
 
@@ -242,7 +235,7 @@ int LevelManager::GetTotalNobbins() const
 
 
 
-glm::vec2 LevelManager::GridToWorld(const GridPosition& gridPos) const
+glm::vec2 LevelManager::GridToWorld(const Game::Level::GridPosition& gridPos) const
 {
 	if (!m_pGridComponent)
 		std::abort();
@@ -250,15 +243,7 @@ glm::vec2 LevelManager::GridToWorld(const GridPosition& gridPos) const
 	return m_pGridComponent->GridToWorld({ gridPos.column, gridPos.row });
 }
 
-std::shared_ptr<bae::GameObject> LevelManager::CreateEntityManager(bae::Scene& scene) const
-{
-	auto uEntityManager = std::make_shared<bae::GameObject>("EntityManager");
-	uEntityManager->AddComponent<Game::Components::EntityManagerComponent>(*uEntityManager, scene);
-
-	return uEntityManager;
-}
-
-std::shared_ptr<bae::GameObject> LevelManager::CreateGrid(const Grid& grid) const
+std::shared_ptr<bae::GameObject> LevelManager::CreateGrid(const Game::Level::Grid& grid) const
 {
 	auto uGrid = std::make_shared<bae::GameObject>("Grid");
 	uGrid->SetWorldLocation({ 0, 54 }); // yep, magic numbers
@@ -270,7 +255,7 @@ std::shared_ptr<bae::GameObject> LevelManager::CreateGrid(const Grid& grid) cons
 	return uGrid;
 }
 
-std::shared_ptr<bae::GameObject> LevelManager::CreatePlayer(const GridPosition& pos) const
+std::shared_ptr<bae::GameObject> LevelManager::CreatePlayer(const Game::Level::GridPosition& pos) const
 {
 	auto player = std::make_shared<bae::GameObject>("Digger");
 	player->AddComponent<Game::Entities::DiggerComponent>(*player);
@@ -279,7 +264,7 @@ std::shared_ptr<bae::GameObject> LevelManager::CreatePlayer(const GridPosition& 
 	return player;
 }
 
-std::shared_ptr<bae::GameObject> LevelManager::CreateEmerald(const Emerald& emerald) const
+std::shared_ptr<bae::GameObject> LevelManager::CreateEmerald(const Game::Level::Emerald& emerald) const
 {
 	auto uEmerald = std::make_shared<bae::GameObject>("Emerald");
 	uEmerald->AddComponent<Game::Entities::EmeraldComponent>(*uEmerald);
@@ -288,7 +273,7 @@ std::shared_ptr<bae::GameObject> LevelManager::CreateEmerald(const Emerald& emer
 	return uEmerald;
 }
 
-std::shared_ptr<bae::GameObject> LevelManager::CreateGoldBag(const GoldBag& goldBag) const
+std::shared_ptr<bae::GameObject> LevelManager::CreateGoldBag(const Game::Level::GoldBag& goldBag) const
 {
 	auto uGoldBag = std::make_shared<bae::GameObject>("GoldBag");
 	uGoldBag->AddComponent<Game::Entities::GoldBagComponent>(*uGoldBag);
@@ -297,7 +282,7 @@ std::shared_ptr<bae::GameObject> LevelManager::CreateGoldBag(const GoldBag& gold
 	return uGoldBag;
 }
 
-std::shared_ptr<bae::GameObject> LevelManager::CreateBonus(const Bonus& bonus) const
+std::shared_ptr<bae::GameObject> LevelManager::CreateBonus(const Game::Level::Bonus& bonus) const
 {
 	auto uBonus = std::make_shared<bae::GameObject>("Bonus");
 	uBonus->AddComponent<Game::Entities::BonusComponent>(*uBonus, bonus.bonusModeScore, bonus.bonusModeTime);
@@ -305,10 +290,10 @@ std::shared_ptr<bae::GameObject> LevelManager::CreateBonus(const Bonus& bonus) c
 	return uBonus;
 }
 
-std::shared_ptr<bae::GameObject> LevelManager::CreateNobbinSpawner(const NobbinSpawner& spawner, bae::Scene& scene) const
+std::shared_ptr<bae::GameObject> LevelManager::CreateNobbinSpawner(const Game::Level::NobbinSpawner& spawner) const
 {
 	auto nobbinSpawner = std::make_shared<bae::GameObject>("NobbinSpawner");
-	nobbinSpawner->AddComponent<Game::Entities::NobbinSpawnerComponent>(*nobbinSpawner, scene, spawner.spawnDelay,
+	nobbinSpawner->AddComponent<Game::Entities::NobbinSpawnerComponent>(*nobbinSpawner, *m_pScene, spawner.spawnDelay,
 		spawner.maxNobbins, spawner.totalToSpawn, spawner.bonus.bonusModeScore, spawner.bonus.bonusModeTime);
 	nobbinSpawner->SetWorldLocation(GridToWorld(spawner.position));
 

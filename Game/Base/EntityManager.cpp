@@ -1,4 +1,4 @@
-﻿#include "EntityManagerComponent.h"
+﻿#include "EntityManager.h"
 
 #include <iostream>
 
@@ -13,32 +13,27 @@
 #include "../Components/HealthComponent.h"
 
 
-using namespace Game::Components;
+using namespace Game::Managers;
 
 
-EntityManagerComponent::EntityManagerComponent(bae::GameObject& owner, bae::Scene& currentScene) :
-	bae::Component(owner),
-	m_CurrentScene{ &currentScene },
-	m_SubjectEvents{}
+EntityManager::EntityManager()
 {
 }
 
 
-void EntityManagerComponent::LateUpdate()
+void EntityManager::LateUpdate()
 {
-
-
 	HandleCollisions();
 	HandleEvents();
 }
 
-void EntityManagerComponent::Notify(bae::EventType event, bae::Subject* subject)
+void EntityManager::Notify(bae::EventType event, bae::Subject* subject)
 {
 	m_SubjectEvents.insert(std::pair(event, subject));
 
 }
 
-void EntityManagerComponent::RemoveAllPlayers()
+void EntityManager::RemoveAllPlayers()
 {
 
 	for (auto& uObject : m_CurrentScene->GetObjects())
@@ -53,7 +48,7 @@ void EntityManagerComponent::RemoveAllPlayers()
 
 }
 
-void EntityManagerComponent::RemoveAllNobbins()
+void EntityManager::RemoveAllNobbins()
 {
 
 	for (auto& uObject : m_CurrentScene->GetObjects())
@@ -69,7 +64,7 @@ void EntityManagerComponent::RemoveAllNobbins()
 }
 
 
-void EntityManagerComponent::HandleEvents()
+void EntityManager::HandleEvents()
 {
 	for (auto& [eventType, pSubject] : m_SubjectEvents)
 	{
@@ -89,7 +84,7 @@ void EntityManagerComponent::HandleEvents()
 			{
 				RemoveAllNobbins();
 				RemoveAllPlayers();
-				Game::Level::LevelManager::GetInstance().ReloadLevel();
+				Game::Managers::LevelManager::GetInstance().ReloadLevel();
 
 			}
 			break;
@@ -104,7 +99,7 @@ void EntityManagerComponent::HandleEvents()
 
 }
 
-void EntityManagerComponent::HandleCollisions()
+void EntityManager::HandleCollisions()
 {
 	if (!m_CurrentScene)
 		return;
@@ -135,12 +130,12 @@ void EntityManagerComponent::HandleCollisions()
 	// Handle Player Collisions
 	for (auto& uPlayer : uPlayers)
 	{
-		auto playerHitbox = uPlayer->GetComponent<HitboxComponent>()->GetHitbox();
+		auto playerHitbox = uPlayer->GetComponent<Game::Components::HitboxComponent>()->GetHitbox();
 
 		// Enemies
 		for (auto& uEnemy : uEnemies)
 		{
-			auto enemyHitbox = uEnemy->GetComponent<HitboxComponent>()->GetHitbox();
+			auto enemyHitbox = uEnemy->GetComponent<Game::Components::HitboxComponent>()->GetHitbox();
 
 			if (bae::Utils::IsOverlapping(playerHitbox, enemyHitbox))
 			{
@@ -153,7 +148,7 @@ void EntityManagerComponent::HandleCollisions()
 		// Collectibles
 		for (auto& uCollectible : uCollectibles)
 		{
-			auto collectibleHitbox = uCollectible->GetComponent<HitboxComponent>()->GetHitbox();
+			auto collectibleHitbox = uCollectible->GetComponent<Game::Components::HitboxComponent>()->GetHitbox();
 
 			if (bae::Utils::IsOverlapping(playerHitbox, collectibleHitbox))
 			{
@@ -167,12 +162,12 @@ void EntityManagerComponent::HandleCollisions()
 
 	for (auto& uEnemy : uEnemies)
 	{
-		auto enemyHitbox = uEnemy->GetComponent<HitboxComponent>()->GetHitbox();
+		auto enemyHitbox = uEnemy->GetComponent<Game::Components::HitboxComponent>()->GetHitbox();
 
 		// Collectibles
 		for (auto& uCollectible : uCollectibles)
 		{
-			auto collectibleHitbox = uCollectible->GetComponent<HitboxComponent>()->GetHitbox();
+			auto collectibleHitbox = uCollectible->GetComponent<Game::Components::HitboxComponent>()->GetHitbox();
 
 			if (bae::Utils::IsOverlapping(enemyHitbox, collectibleHitbox))
 			{
@@ -184,7 +179,7 @@ void EntityManagerComponent::HandleCollisions()
 		// Projectile
 		for (auto& uProjectile : uProjectiles)
 		{
-			auto projectileHitbox = uProjectile->GetComponent<HitboxComponent>()->GetHitbox();
+			auto projectileHitbox = uProjectile->GetComponent<Game::Components::HitboxComponent>()->GetHitbox();
 
 			if (bae::Utils::IsOverlapping(enemyHitbox, projectileHitbox))
 			{

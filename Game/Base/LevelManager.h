@@ -12,6 +12,7 @@
 #include "Core/Scene.h"
 
 #include "../Base/Items.h"
+#include "../Base/Level.h"
 #include "../Components/GridComponent.h"
 
 
@@ -26,31 +27,26 @@ namespace Game::Components
 	class EntityManagerComponent;
 }
 
-namespace Game::Level
+namespace Game::Managers
 {
-	struct Level;
-
-	//struct LevelState
-	//{
-		//std::vector<
-	//};
-
 	class LevelManager final : public bae::Singleton<LevelManager>
 	{
 	public:
 		void LoadLevel(const std::filesystem::path& filePath);
 		void LoadLevelsFromDirectory(const std::filesystem::path& folderPath);
 
+		void SetScene(bae::Scene& scene) { m_pScene = &scene; }
+
 		// Level management
-		Level* GetCurrentLevel() const { return m_pCurrentLevel; }
+		Game::Level::Level* GetCurrentLevel() const { return m_pCurrentLevel; }
 		int GetCurrentLevelNumber() const { return m_CurrentLevelNumber; }
 
 		bool SetCurrentLevel(int levelNumber);
-		Level* GetLevel(int levelNumber) const;
+		Game::Level::Level* GetLevel(int levelNumber) const;
 
 		// Scene integration
-		void SpawnLevelInScene(bae::Scene& scene);
-		void ClearScene(bae::Scene& scene);
+		void SpawnLevel();
+		void ClearScene();
 
 		bool IsLevelComplete() const;
 		void ResetLevel();
@@ -72,20 +68,19 @@ namespace Game::Level
 		~LevelManager();
 
 
-		glm::vec2 GridToWorld(const GridPosition& gridPos) const;
+		glm::vec2 GridToWorld(const Game::Level::GridPosition& gridPos) const;
 
-		std::shared_ptr<bae::GameObject> [[nodiscard]] CreateEntityManager(bae::Scene& scene) const;
-		std::shared_ptr<bae::GameObject> [[nodiscard]] CreateGrid(const Grid& grid) const;
-		std::shared_ptr<bae::GameObject> [[nodiscard]] CreatePlayer(const GridPosition& pos) const;
-		std::shared_ptr<bae::GameObject> [[nodiscard]] CreateEmerald(const Emerald& emerald) const;
-		std::shared_ptr<bae::GameObject> [[nodiscard]] CreateGoldBag(const GoldBag& goldBag) const;
-		std::shared_ptr<bae::GameObject> [[nodiscard]] CreateBonus(const Bonus& bonus) const;
-		std::shared_ptr<bae::GameObject> [[nodiscard]] CreateNobbinSpawner(const NobbinSpawner& spawner, bae::Scene& scene) const;
+		std::shared_ptr<bae::GameObject> [[nodiscard]] CreateGrid(const Game::Level::Grid& grid) const;
+		std::shared_ptr<bae::GameObject> [[nodiscard]] CreatePlayer(const Game::Level::GridPosition& pos) const;
+		std::shared_ptr<bae::GameObject> [[nodiscard]] CreateEmerald(const Game::Level::Emerald& emerald) const;
+		std::shared_ptr<bae::GameObject> [[nodiscard]] CreateGoldBag(const Game::Level::GoldBag& goldBag) const;
+		std::shared_ptr<bae::GameObject> [[nodiscard]] CreateBonus(const Game::Level::Bonus& bonus) const;
+		std::shared_ptr<bae::GameObject> [[nodiscard]] CreateNobbinSpawner(const Game::Level::NobbinSpawner& spawner) const;
 
 
-		std::unordered_map<int, std::unique_ptr<Level>> m_Levels{};
+		std::unordered_map<int, std::unique_ptr<Game::Level::Level>> m_Levels{};
 		bae::Scene* m_pScene{};
-		Level* m_pCurrentLevel{};
+		Game::Level::Level* m_pCurrentLevel{};
 		int m_CurrentLevelNumber{};
 
 		Game::Components::GridComponent* m_pGridComponent{};

@@ -13,6 +13,8 @@ namespace Game::Components
 
 		int GetScoreOnPickup() const { return m_ScoreOnPickup; }
 
+		void Interact() {};
+
 
 	private:
 		const int m_ScoreOnPickup;

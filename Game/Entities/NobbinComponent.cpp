@@ -33,7 +33,7 @@ NobbinComponent::NobbinComponent(bae::GameObject& owner) :
 
 	m_SpriteComp = m_Owner->GetComponent<bae::SpriteComponent>();
 
-	auto& lm = Game::Level::LevelManager::GetInstance();
+	auto& lm = Game::Managers::LevelManager::GetInstance();
 	m_Player = lm.GetPlayer();
 
 	auto aiComp = m_Owner->GetComponent<Game::Components::AIComponent>();

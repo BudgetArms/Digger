@@ -6,6 +6,7 @@
 #include "Core/Observer.h"
 #include "Core/Scene.h"
 #include "Core/EventTypes.h"
+#include "Singletons/Singleton.h"
 
 
 namespace bae
@@ -14,15 +15,14 @@ namespace bae
 	class Subject;
 }
 
-namespace Game::Components
+namespace Game::Managers
 {
-	class EntityManagerComponent : public bae::Component, public bae::Observer
+	class EntityManager : public bae::Singleton<EntityManager>, public bae::Observer
 	{
 	public:
-		EntityManagerComponent(bae::GameObject& owner, bae::Scene& currentScene);
 
 
-		void LateUpdate() override;
+		void LateUpdate();
 
 		virtual void Notify(bae::EventType event, bae::Subject* subject) override;
 
@@ -33,15 +33,19 @@ namespace Game::Components
 
 
 	private:
+		friend bae::Singleton<EntityManager>;
+		EntityManager();
+		~EntityManager() = default;
+
 		void HandleEvents();
 		void HandleCollisions();
 
 
-		std::vector<bae::GameObject*> m_Nobbins;
-		std::vector<bae::GameObject*> m_Diggers;
+		std::vector<bae::GameObject*> m_Nobbins{};
+		std::vector<bae::GameObject*> m_Diggers{};
 
-		bae::Scene* m_CurrentScene;
-		std::unordered_map<bae::EventType, bae::Subject*> m_SubjectEvents; // I wanted to use ringbuffer, but no time
+		bae::Scene* m_CurrentScene{};
+		std::unordered_map<bae::EventType, bae::Subject*> m_SubjectEvents{}; // I wanted to use ringbuffer, but no time
 
 
 	};

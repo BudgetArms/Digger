@@ -88,7 +88,8 @@
 #include "Commands/TestSpriteCommands.h"
 
 #include "Components/AIComponent.h"
-#include "Components/EntityManagerComponent.h"
+#include "Components/EntityManagerComp.h"
+#include "Components/GameModeManagerComponent.h"
 #include "Components/GridComponent.h"
 #include "Components/HitboxComponent.h"
 
@@ -232,7 +233,7 @@ void LoadStartScene()
 	scene.Add(gridObject);
 
 	auto entityManager = std::make_shared<GameObject>("EntityManager");
-	entityManager->AddComponent<Game::Components::EntityManagerComponent>(*entityManager, scene);
+	entityManager->AddComponent<Game::Components::EntityManagerComponent>(*entityManager);
 	scene.Add(entityManager);
 
 
@@ -460,21 +461,32 @@ void LoadTestSoundCommands()
 void LoadLevel1()
 {
 	//*/
+	auto& managersScene = SceneManager::GetInstance().CreateScene("Managers");
+
+	auto gameMode = std::make_shared<bae::GameObject>("GameModeManager");
+	gameMode->AddComponent<Game::Components::GameModeManagerComponent>(*gameMode);
+	managersScene.Add(gameMode);
+
+	auto entityManager = std::make_shared<bae::GameObject>("EntityManager");
+	entityManager->AddComponent<Game::Components::EntityManagerComponent>(*entityManager);
+	managersScene.Add(entityManager);
+
+
 	auto& scene = SceneManager::GetInstance().CreateScene("Level");
 
 	const auto resourcesPath = bae::ResourceManager::GetInstance().GetResourcesPath();
-	auto& lm = Game::Level::LevelManager::GetInstance();
+	auto& lm = Game::Managers::LevelManager::GetInstance();
 	lm.LoadLevel(resourcesPath / "Levels/Level_1.json");
 	lm.LoadLevel(resourcesPath / "Levels/Level_2.json");
 	lm.LoadLevel(resourcesPath / "Levels/Level_3.json");
 
+	lm.SetScene(scene);
 	lm.SetCurrentLevel(1);
-	//lm.SetCurrentLevel(2);
-	//lm.SetCurrentLevel(3);
-	lm.SpawnLevelInScene(scene);
-	//*/
+	lm.SetCurrentLevel(2);
+	lm.SetCurrentLevel(3);
 
-	Game::GameMode::GameModeManager::GetInstance().AddPlayer(1);
+	lm.SetCurrentLevel(1);
+	lm.SpawnLevel();
 
 
 	InputManager::GetInstance().AddController(0);
