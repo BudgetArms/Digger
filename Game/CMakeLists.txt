@@ -28,7 +28,7 @@ add_executable(${PROJECT_NAME}
 	"Components/HealthComponent.h"			"Components/HealthComponent.cpp"
 	"Components/GridComponent.h"			"Components/GridComponent.cpp"
 	"Components/HitboxComponent.h"			"Components/HitboxComponent.cpp"
-	"Base/EntityManager.h"			"Base/EntityManager.cpp"
+	"Base/EntityManager.h"					"Base/EntityManager.cpp"
 	"Components/PickupComponent.h"			"Components/PickupComponent.cpp"
 	"Components/ScoreComponent.h"			"Components/ScoreComponent.cpp"
 
@@ -43,12 +43,30 @@ add_executable(${PROJECT_NAME}
 	
 
 	"Base/GameMode.h" 
-	"Base/SoloPlayerMode.h" "Base/SoloPlayerMode.cpp" 
+	"Base/SoloPlayerMode.h"					"Base/SoloPlayerMode.cpp" 
+	"Base/CoOpMode.h"						"Base/CoOpMode.cpp" 
+	"Base/VersusMode.h"						"Base/VersusMode.cpp"
 
 	"Components/GameModeManagerComponent.h"
+	"Components/EntityManagerComponent.h"
 
-	"Components/EntityManagerComp.h"
- "Base/CoOpMode.h" "Base/CoOpMode.cpp" "Base/VersusMode.cpp" "Base/VersusMode.h" "Base/Level.cpp")
+	"Base/Level.cpp"
+
+	"States/DiggerState.h" 
+	"States/DiggerState.h" 
+
+	"States/DiggerDeathState.h"				"States/DiggerDeathState.cpp" 
+	"States/DiggerNormalState.h"			"States/DiggerNormalState.cpp" 
+	"States/DiggerWinState.h"				"States/DiggerWinState.cpp"			
+
+	"States/NobbinState.h"
+
+	"Commands/SkipLevelCommand.h"         
+	"Commands/MoveCommand.h" 
+	"Components/MoveComponent.h"			"Components/MoveComponent.cpp" 
+	"Base/DirectionEnum.h"
+
+ "States/DiggerState.cpp")
  
 
 find_package(VLD CONFIG)

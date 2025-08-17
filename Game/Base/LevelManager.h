@@ -52,11 +52,14 @@ namespace Game::Managers
 		void ResetLevel();
 		void ReloadLevel();
 
+		void SkipLevel();
+
 		int GetNrLevels() const { return static_cast<int>(m_Levels.size()); }
 		bool HasLevel(int levelNumber) const;
 
 		int GetTotalNobbins() const;
 
+		void ClearAIGrid();
 
 		bae::GameObject* GetPlayer() const { return m_pPlayer; }
 		Game::Components::GridComponent* GetGridComponent() const { return m_pGridComponent; }

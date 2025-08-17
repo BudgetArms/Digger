@@ -1,6 +1,9 @@
 ﻿#include "HealthComponent.h"
 
 #include "Core/HelperFunctions.h"
+#include "../Base/EntityManager.h"
+#include "../Base/LevelManager.h"
+#include "../Entities/DiggerComponent.h"
 
 
 using namespace Game::Components;
@@ -28,6 +31,10 @@ void HealthComponent::Damage(float damage)
 	if (m_Health <= 0)
 	{
 		NotifyObservers(bae::EventType::PLAYER_DIED);
+		std::cout << "player died\n";
+		auto player = Game::Managers::LevelManager::GetInstance().GetPlayer();
+		auto playerComp = player->GetComponent<Game::Entities::DiggerComponent>();
+		playerComp->PlayerDead();
 		return;
 	}
 

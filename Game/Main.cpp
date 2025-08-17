@@ -81,14 +81,16 @@
 #include "Base/GameModeManager.h"
 #include "Base/SoundEvents.h"
 #include "Base/TerrainGridGraph.h"
+#include "Base/EntityManager.h"
 
 #include "Commands/TestGridCommands.h"
 #include "Commands/TestMoveCommands.h"
 #include "Commands/TestSoundCommands.h"
 #include "Commands/TestSpriteCommands.h"
+#include "Commands/MoveCommand.h"
 
 #include "Components/AIComponent.h"
-#include "Components/EntityManagerComp.h"
+#include "Components/EntityManagerComponent.h"
 #include "Components/GameModeManagerComponent.h"
 #include "Components/GridComponent.h"
 #include "Components/HitboxComponent.h"
@@ -111,7 +113,7 @@ void LoadStartScene();
 void LoadDefaultScene();
 void LoadFpsCounterScene();
 void LoadTestSoundCommands();
-void LoadLevel1();
+void LoadLevel();
 
 
 
@@ -183,7 +185,7 @@ void Start()
 	//LoadStartScene();
 	LoadFpsCounterScene();
 	LoadTestSoundCommands();
-	LoadLevel1();
+	LoadLevel();
 
 	/*/
 	auto& scene = SceneManager::GetInstance().CreateScene("GridScene");
@@ -401,7 +403,7 @@ void LoadTestSoundCommands()
 
 	// Play & Pause Immediately after
 	auto activeSoundId = soundSystem->Play(gs::GetSoundId(gs::SoundEvents::PlayerDeathLong), 1);
-	soundSystem->Pause(activeSoundId);
+	//soundSystem->Pause(activeSoundId);
 
 
 	// Sound Commands:
@@ -458,7 +460,7 @@ void LoadTestSoundCommands()
 }
 
 
-void LoadLevel1()
+void LoadLevel()
 {
 	//*/
 	auto& managersScene = SceneManager::GetInstance().CreateScene("Managers");
@@ -473,6 +475,7 @@ void LoadLevel1()
 
 
 	auto& scene = SceneManager::GetInstance().CreateScene("Level");
+	Game::Managers::EntityManager::GetInstance().SetScene(scene);
 
 	const auto resourcesPath = bae::ResourceManager::GetInstance().GetResourcesPath();
 	auto& lm = Game::Managers::LevelManager::GetInstance();
@@ -486,6 +489,7 @@ void LoadLevel1()
 	lm.SetCurrentLevel(3);
 
 	lm.SetCurrentLevel(1);
+	lm.SetCurrentLevel(2);
 	lm.SpawnLevel();
 
 
@@ -496,9 +500,13 @@ void LoadLevel1()
 	auto& keyboard = bae::InputManager::GetInstance().GetKeyboard();
 
 	auto pPlayer = lm.GetPlayer();
+	pPlayer->AddComponent<Game::Components::MoveComponent>(*pPlayer, 100.f);
+
 
 	// move player 1 (controller)
-	auto moveCommand = std::make_unique<Game::Commands::TestMoveCommand>(*pPlayer, glm::vec2(0, 1), 200.f);
+
+	//auto moveCommand = std::make_unique<Game::Commands::TestMoveCommand>(*pPlayer, glm::vec2(0, 1), 100.f);
+	/*/
 	myController->AddControllerCommands(std::move(moveCommand), XINPUT_GAMEPAD_DPAD_DOWN, InputManager::ButtonState::Pressed);
 
 	moveCommand = std::make_unique<Game::Commands::TestMoveCommand>(*pPlayer, glm::vec2(0, -1), 200.f);
@@ -509,9 +517,25 @@ void LoadLevel1()
 
 	moveCommand = std::make_unique<Game::Commands::TestMoveCommand>(*pPlayer, glm::vec2(1, 0), 200.f);
 	myController->AddControllerCommands(std::move(moveCommand), XINPUT_GAMEPAD_DPAD_RIGHT, InputManager::ButtonState::Pressed);
-
-
 	//*/
+
+	auto realMoveCommand = std::make_unique<Game::Commands::MoveCommand>(*pPlayer, Game::Direction::Up);
+	myController->AddControllerCommands(std::move(realMoveCommand), XINPUT_GAMEPAD_DPAD_UP, InputManager::ButtonState::Pressed);
+
+	realMoveCommand = std::make_unique<Game::Commands::MoveCommand>(*pPlayer, Game::Direction::Up);
+	keyboard.AddKeyboardCommands(std::move(realMoveCommand), SDLK_w, InputManager::ButtonState::Pressed);
+
+	realMoveCommand = std::make_unique<Game::Commands::MoveCommand>(*pPlayer, Game::Direction::Down);
+	keyboard.AddKeyboardCommands(std::move(realMoveCommand), SDLK_s, InputManager::ButtonState::Pressed);
+
+	realMoveCommand = std::make_unique<Game::Commands::MoveCommand>(*pPlayer, Game::Direction::Left);
+	keyboard.AddKeyboardCommands(std::move(realMoveCommand), SDLK_a, InputManager::ButtonState::Pressed);
+
+	realMoveCommand = std::make_unique<Game::Commands::MoveCommand>(*pPlayer, Game::Direction::Right);
+	keyboard.AddKeyboardCommands(std::move(realMoveCommand), SDLK_d, InputManager::ButtonState::Pressed);
+
+
+	/*/
 	// move player 2 (keyboard)
 	moveCommand = std::make_unique<Game::Commands::TestMoveCommand>(*pPlayer, glm::vec2(0, -1), 100.f);
 	keyboard.AddKeyboardCommands(std::move(moveCommand), SDLK_w, InputManager::ButtonState::Pressed);
@@ -524,6 +548,7 @@ void LoadLevel1()
 
 	moveCommand = std::make_unique<Game::Commands::TestMoveCommand>(*pPlayer, glm::vec2(1, 0), 100.f);
 	keyboard.AddKeyboardCommands(std::move(moveCommand), SDLK_d, InputManager::ButtonState::Pressed);
+
 	//*/
 
 	/*/

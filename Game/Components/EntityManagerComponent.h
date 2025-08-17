@@ -21,6 +21,11 @@ namespace Game::Components
 			Game::Managers::EntityManager::GetInstance().LateUpdate();
 		}
 
+		void Render() const override
+		{
+			Game::Managers::EntityManager::GetInstance().Render();
+		}
+
 
 	};
 }

@@ -18,6 +18,7 @@ using namespace Game::Managers;
 
 EntityManager::EntityManager()
 {
+
 }
 
 
@@ -25,6 +26,14 @@ void EntityManager::LateUpdate()
 {
 	HandleCollisions();
 	HandleEvents();
+}
+
+
+void EntityManager::Render() const
+{
+	bae::Utils::DrawCircle({ 100, 100 }, 100, bae::Utils::Color::Black);
+	for (auto rect : m_Holes)
+		bae::Utils::FillRect(rect, bae::Utils::Color::Black);
 }
 
 void EntityManager::Notify(bae::EventType event, bae::Subject* subject)
@@ -152,6 +161,7 @@ void EntityManager::HandleCollisions()
 
 			if (bae::Utils::IsOverlapping(playerHitbox, collectibleHitbox))
 			{
+				uCollectible->GetComponent<Game::Components::PickupComponent>()->Interact(*uPlayer.get());
 
 			}
 		}

@@ -13,7 +13,7 @@ namespace Game::Components
 
 		int GetScoreOnPickup() const { return m_ScoreOnPickup; }
 
-		void Interact() {};
+		void Interact(bae::GameObject& player);
 
 
 	private:

@@ -2,6 +2,8 @@
 
 #include <unordered_map>
 
+#include <SDL_rect.h>
+
 #include "Components/Component.h"
 #include "Core/Observer.h"
 #include "Core/Scene.h"
@@ -21,12 +23,15 @@ namespace Game::Managers
 	{
 	public:
 
-
 		void LateUpdate();
+		void Render() const;
 
 		virtual void Notify(bae::EventType event, bae::Subject* subject) override;
 
+
+		void SetScene(bae::Scene& scene) { m_CurrentScene = &scene; }
 		std::vector<bae::GameObject*> GetDiggers() { return m_Diggers; }
+
 
 		void RemoveAllPlayers();
 		void RemoveAllNobbins();
@@ -47,6 +52,7 @@ namespace Game::Managers
 		bae::Scene* m_CurrentScene{};
 		std::unordered_map<bae::EventType, bae::Subject*> m_SubjectEvents{}; // I wanted to use ringbuffer, but no time
 
+		std::vector<SDL_Rect> m_Holes;
 
 	};
 }

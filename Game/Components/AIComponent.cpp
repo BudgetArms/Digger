@@ -61,15 +61,6 @@ void AIComponent::Update()
 
 }
 
-void AIComponent::Render() const
-{
-	bae::Utils::FillCircle({ 200, 200 }, 10, bae::Utils::Color::Blue);
-	//if (m_TerrainGridGraph)
-		//m_TerrainGridGraph->Render();
-
-}
-
-
 
 void AIComponent::SetPath(const glm::vec2& position)
 {

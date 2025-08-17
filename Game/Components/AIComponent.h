@@ -24,7 +24,6 @@ namespace Game::Components
 
 
 		void Update();
-		void Render() const;
 
 		void SetPath(const glm::vec2& position);
 		void SetPath(bae::GameObject* target);

@@ -1,7 +1,6 @@
 ﻿#include "Level.h"
 
 
-
 void Game::Level::from_json(const nlohmann::json& json, Level& plevel)
 {
 	json.at("levelNumber").get_to(plevel.levelNumber);

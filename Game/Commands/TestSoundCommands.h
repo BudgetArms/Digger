@@ -164,6 +164,7 @@ namespace Game::Sounds
 		{
 			auto& soundSystem = bae::ServiceLocator::GetSoundSystem();
 			soundSystem.Play(m_SoundId, m_Volume);
+
 		};
 
 

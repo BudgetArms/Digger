@@ -213,6 +213,12 @@ void LevelManager::ReloadLevel()
 
 }
 
+void Game::Managers::LevelManager::SkipLevel()
+{
+	m_CurrentLevelNumber++;
+	ResetLevel();
+}
+
 bool LevelManager::HasLevel(int levelNumber) const
 {
 	auto levelIt = m_Levels.find(levelNumber);
@@ -231,6 +237,13 @@ int LevelManager::GetTotalNobbins() const
 
 
 	return totalNobbinsToSpawn;
+}
+
+void LevelManager::ClearAIGrid()
+{
+	auto test = m_pGridComponent->GetTerrainGridGraph();
+	test->Clear();
+
 }
 
 

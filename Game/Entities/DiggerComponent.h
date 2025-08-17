@@ -9,6 +9,8 @@
 #include "Core/Text2D.h"
 #include "Components/Component.h"
 
+#include "../States/DiggerState.h"
+
 
 namespace Game::Entities
 {
@@ -21,18 +23,26 @@ namespace Game::Entities
 		void Update() override;
 		void Render() const override;
 
+		void SetState(std::unique_ptr<Game::States::DiggerState> newState);
+
+
+		void PlayerDead();
+
 
 		bool m_BonusStage{ false };
 
 
 	private:
 		int m_Lives{ 3 };
+		bool m_Dead{ false };
 
 		const glm::vec2 m_LivesStartPosition{ 240, 12 };
 		const SDL_Rect m_LiveSrcRect{ 404, 204, 16, 12 };
 
 		std::unique_ptr<bae::Texture2D> m_LivesTexture;
 		std::unique_ptr<bae::Text2D> m_TextTexture;
+
+		std::unique_ptr<Game::States::DiggerState> m_State{};
 
 
 	};

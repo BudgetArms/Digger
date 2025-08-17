@@ -17,7 +17,7 @@ EmeraldComponent::EmeraldComponent(bae::GameObject& owner) :
 		SDL_Rect(8, 168, 40, 24), 1, 1);
 
 	m_Owner->AddComponent<Game::Components::HitboxComponent>(*m_Owner, 17, 17);
-	//m_Owner->GetComponent<Game::Components::HitboxComponent>()->m_bRenderHitbox = true;
+	m_Owner->GetComponent<Game::Components::HitboxComponent>()->m_bRenderHitbox = true;
 
 	m_Owner->AddComponent<Game::Components::PickupComponent>(*m_Owner, 100);
 

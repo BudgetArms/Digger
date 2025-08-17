@@ -6,11 +6,19 @@
 #include "Managers/ResourceManager.h"
 #include "Components/SpriteComponent.h"
 #include "Components/TextComponent.h"
+#include "Managers/InputManager.h"
+#include "Core/ServiceLocator.h"
 #include "Core/Utils.h"
+#include "Wrappers/Keyboard.h"
+#include "Wrappers/Controller.h"
 
 #include "../Components/HealthComponent.h"
 #include "../Components/HitboxComponent.h"
 #include "../Components/ScoreComponent.h"
+#include "../States/DiggerNormalState.h"
+#include "../Commands/TestSoundCommands.h"
+#include "../Commands/SkipLevelCommand.h"
+#include "../States/DiggerDeathState.h"
 
 
 using namespace Game::Entities;
@@ -39,6 +47,33 @@ DiggerComponent::DiggerComponent(bae::GameObject& owner) :
 	//m_Owner->GetComponent<Game::Components::HitboxComponent>()->m_bRenderHitbox = true;
 
 	m_Owner->SetWorldScale({ 3.f, 3.f });
+
+	m_State = std::make_unique<Game::States::DiggerNormalState>();
+	m_State->OnEnter(owner);
+
+	//*
+
+	auto& im = bae::InputManager::GetInstance();
+	im.ClearCommands();
+
+	bae::SoundEventData eventData
+	{
+		.Type = bae::SoundEventType::StopAll
+	};
+
+	bae::ServiceLocator::GetAudioQueue().SendSoundEvent(eventData);
+
+	auto& keyboard = im.GetKeyboard();
+
+	auto soundCommand = std::make_unique<Game::Sounds::TestSoundCommand>(Game::Sounds::TestSoundEvents::ToggleMuteAll);
+	keyboard.AddKeyboardCommands(std::move(soundCommand), SDLK_F2, bae::InputManager::ButtonState::Down);
+
+	auto skipCommand = std::make_unique<Game::Commands::SkipLevelCommand>();
+	keyboard.AddKeyboardCommands(std::move(skipCommand), SDLK_F1, bae::InputManager::ButtonState::Down);
+
+	//*/
+
+
 }
 
 
@@ -48,6 +83,9 @@ void DiggerComponent::Update()
 
 	m_TextTexture->SetText(std::to_string(pScoreComp->GetScore()));
 	m_TextTexture->Update();
+
+	if (m_State)
+		m_State->Update();
 }
 
 void DiggerComponent::Render() const
@@ -63,24 +101,33 @@ void DiggerComponent::Render() const
 	}
 
 
-
 	m_TextTexture->Render();
 
-	//if (auto* pSpriteComp = m_Owner->GetComponent<bae::SpriteComponent>())
-	{
-		//pSpriteComp->Render();
+}
 
-		/*
-		m_Owner->AddLocation({ 200, 0, 0 });
-		pSpriteComp->NextSprite();
+void Game::Entities::DiggerComponent::SetState(std::unique_ptr<Game::States::DiggerState> newState)
+//void Game::Entities::DiggerComponent::SetState(std::unique_ptr<Game::States::DiggerState>)
+{
+	if (m_State)
+		m_State->OnExit();
 
-		pSpriteComp->Render();
-		m_Owner->AddLocation({ -200, 0, 0 });
-		pSpriteComp->PreviousSprite();
-		*/
+	m_State = std::move(newState);
+
+	if (m_State)
+		m_State->OnEnter(*m_Owner);
 
 
-	}
+}
+
+void Game::Entities::DiggerComponent::PlayerDead()
+{
+	if (m_Dead)
+		return;
+
+	m_Dead = true;
+	if (m_Owner->GetComponent<Game::Components::HealthComponent>()->IsDead())
+		SetState(std::make_unique <Game::States::DiggerDeathState>());
+
 }
 
 
