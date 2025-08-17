@@ -535,6 +535,19 @@ void LoadLevel()
 	keyboard.AddKeyboardCommands(std::move(realMoveCommand), SDLK_d, InputManager::ButtonState::Pressed);
 
 
+	realMoveCommand = std::make_unique<Game::Commands::MoveCommand>(*pPlayer, Game::Direction::Up);
+	myController->AddControllerCommands(std::move(realMoveCommand), XINPUT_GAMEPAD_DPAD_UP, InputManager::ButtonState::Pressed);
+
+	realMoveCommand = std::make_unique<Game::Commands::MoveCommand>(*pPlayer, Game::Direction::Down);
+	keyboard.AddKeyboardCommands(std::move(realMoveCommand), XINPUT_GAMEPAD_DPAD_DOWN, InputManager::ButtonState::Pressed);
+
+	realMoveCommand = std::make_unique<Game::Commands::MoveCommand>(*pPlayer, Game::Direction::Left);
+	myController->AddControllerCommands(std::move(realMoveCommand), XINPUT_GAMEPAD_DPAD_LEFT, InputManager::ButtonState::Pressed);
+
+	realMoveCommand = std::make_unique<Game::Commands::MoveCommand>(*pPlayer, Game::Direction::Right);
+	myController->AddControllerCommands(std::move(realMoveCommand), XINPUT_GAMEPAD_DPAD_RIGHT, InputManager::ButtonState::Pressed);
+
+
 	/*/
 	// move player 2 (keyboard)
 	moveCommand = std::make_unique<Game::Commands::TestMoveCommand>(*pPlayer, glm::vec2(0, -1), 100.f);

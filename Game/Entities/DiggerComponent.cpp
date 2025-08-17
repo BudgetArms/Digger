@@ -123,6 +123,7 @@ void Game::Entities::DiggerComponent::PlayerDead()
 {
 	if (m_Dead)
 		return;
+	m_Lives--;
 
 	m_Dead = true;
 	if (m_Owner->GetComponent<Game::Components::HealthComponent>()->IsDead())
