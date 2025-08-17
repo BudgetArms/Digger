@@ -8,6 +8,10 @@ message("\nGame CMake")
 add_executable(${PROJECT_NAME}
 	"Main.cpp"
 
+	"Base/GameModeManager.h"				"Base/GameModeManager.cpp"
+	"Base/Items.h" 
+	"Base/Level.h"
+	"Base/LevelManager.h"					"Base/LevelManager.cpp"
 	"Base/SoundEvents.h"
 	"Base/TerrainCostCalculator.h" 
 	"Base/TerrainTypes.h" 
@@ -35,6 +39,7 @@ add_executable(${PROJECT_NAME}
 	"Entities/EmeraldComponent.h"			"Entities/EmeraldComponent.cpp"
 	"Entities/GoldBagComponent.h"			"Entities/GoldBagComponent.cpp" 
 	"Entities/NobbinComponent.h"			"Entities/NobbinComponent.cpp"
+	"Entities/NobbinSpawnerComponent.h"		"Entities/NobbinSpawnerComponent.cpp"
 	
 
 )

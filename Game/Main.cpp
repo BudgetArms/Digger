@@ -77,6 +77,8 @@
 
 
 // Game Includes
+#include "Base/LevelManager.h"
+#include "Base/GameModeManager.h"
 #include "Base/SoundEvents.h"
 #include "Base/TerrainGridGraph.h"
 
@@ -108,6 +110,7 @@ void LoadStartScene();
 void LoadDefaultScene();
 void LoadFpsCounterScene();
 void LoadTestSoundCommands();
+void LoadLevel1();
 
 
 
@@ -123,8 +126,8 @@ int main(int, char* [])
 	}
 #endif
 
-	bae::Utils::Window window{ "Digger", "./Resources/", 960, 612, false };
 
+	bae::Utils::Window window{ "Digger", "./Resources/", 960, 612, false };
 
 
 #if __EMSCRIPTEN__
@@ -167,20 +170,28 @@ int main(int, char* [])
 
 void Start()
 {
-	bae::ServiceLocator::RegisterSoundSystem(std::make_unique<bae::SdlSoundSystem>());
 	bae::ServiceLocator::RegisterAudioQueue<bae::SdlAudioClip>();
 	//bae::ServiceLocator::RegisterAudioQueue<bae::LoggingAudioClip<bae::SdlAudioClip>>();
 
-	//bae::ServiceLocator::RegisterSoundSystem(std::make_unique<bae::NullSoundSystem>());
-	//bae::ServiceLocator::RegisterSoundSystem(std::make_unique<bae::SdlSoundSystem>());
+	bae::ServiceLocator::RegisterSoundSystem(std::make_unique<bae::SdlSoundSystem>());
 	//bae::ServiceLocator::RegisterSoundSystem(std::make_unique<bae::LoggingSoundSystem>(std::make_unique<bae::SdlSoundSystem>()));
 
 
 	LoadSounds();
 	//LoadDefaultScene();
-	LoadStartScene();
+	//LoadStartScene();
 	LoadFpsCounterScene();
 	LoadTestSoundCommands();
+	LoadLevel1();
+
+	/*/
+	auto& scene = SceneManager::GetInstance().CreateScene("GridScene");
+	auto gridObject = std::make_shared<GameObject>("Grid");
+	gridObject->SetWorldLocation({ 0, 54 });
+	//gridObject->AddComponent<Game::Components::GridComponent>(*gridObject, 15, 10, glm::ivec2{ 60, 54 }, false, false);
+	gridObject->AddComponent<Game::Components::GridComponent>(*gridObject, 2, 2, glm::ivec2{ 60, 54 }, false, false);
+	scene.Add(gridObject);
+	//*/
 
 
 }
@@ -214,53 +225,47 @@ void LoadStartScene()
 	auto& scene = SceneManager::GetInstance().CreateScene("GridScene");
 
 	auto gridObject = std::make_shared<GameObject>("Grid");
-	gridObject->SetWorldLocation({ 0, 54, 0 });
 
-	//gridObject->AddComponent<Game::GridComponent>(*gridObject, 16, 12, 40, false, false);
-	gridObject->AddComponent<Game::GridComponent>(*gridObject, 15, 10, glm::ivec2{ 60, 54 }, false, false);
-	auto pTerrainGridGraph = gridObject->GetComponent<Game::GridComponent>()->GetTerrainGridGraph(); ////////////////////
+	gridObject->SetWorldLocation({ 0, 54 });
+	gridObject->AddComponent<Game::Components::GridComponent>(*gridObject, 15, 10, glm::ivec2{ 60, 54 }, false, false);
+	auto pTerrainGridGraph = gridObject->GetComponent<Game::Components::GridComponent>()->GetTerrainGridGraph(); ////////////////////
 	scene.Add(gridObject);
 
 	auto entityManager = std::make_shared<GameObject>("EntityManager");
-	entityManager->AddComponent<Game::Components::EntityManagerComponent>(*entityManager, &scene);
+	entityManager->AddComponent<Game::Components::EntityManagerComponent>(*entityManager, scene);
 	scene.Add(entityManager);
+
 
 	auto digger = std::make_shared<GameObject>("Digger");
 	digger->AddComponent<Game::Entities::DiggerComponent>(*digger);
-	digger->AddLocation({ 480, 576, 0 });
-	digger->SetWorldScale({ 3, 3 });
+	digger->AddLocation({ 480, 576 });
 	scene.Add(digger);
 
 	auto nobbin = std::make_shared<GameObject>("Nobbin");
 	nobbin->AddComponent<Game::Entities::NobbinComponent>(*nobbin);
-	nobbin->AddLocation({ 816, 90, 0 });
-	nobbin->SetWorldScale({ 3, 3 });
+	nobbin->AddLocation({ 816, 90 });
 	scene.Add(nobbin);
 
-	auto aiComp = nobbin->GetComponent<Game::Components::AIComponent>(); ///////
-	aiComp->m_TerrainGridGraph = pTerrainGridGraph; /////////////////
-	aiComp->SetPath({ 100, 400 });
-
+	auto aiComp = nobbin->GetComponent<Game::Components::AIComponent>();
+	aiComp->m_TerrainGridGraph = pTerrainGridGraph;
 
 
 
 	auto emerald = std::make_shared<GameObject>("Emerald");
 	emerald->AddComponent<Game::Entities::EmeraldComponent>(*emerald);
-	emerald->AddLocation({ 300, 300, 0 });
-	emerald->SetWorldScale({ 3, 3 });
+	emerald->AddLocation({ 300, 300 });
 	scene.Add(emerald);
 
 	auto goldBag = std::make_shared<GameObject>("GoldBag");
 	goldBag->AddComponent<Game::Entities::GoldBagComponent>(*goldBag);
-	goldBag->AddLocation({ 400, 300, 0 });
-	goldBag->SetWorldScale({ 3, 3 });
+	goldBag->AddLocation({ 400, 300 });
 	scene.Add(goldBag);
 
 	auto bonus = std::make_shared<GameObject>("Bonus");
-	bonus->AddComponent<Game::Entities::BonusComponent>(*bonus);
-	bonus->AddLocation({ 500, 300, 0 });
-	bonus->SetWorldScale({ 3, 3 });
+	bonus->AddComponent<Game::Entities::BonusComponent>(*bonus, 10.f, 1000.f);
+	bonus->AddLocation({ 500, 300 });
 	scene.Add(bonus);
+
 
 
 
@@ -355,7 +360,7 @@ void LoadDefaultScene()
 	int width, height;
 	SDL_GetWindowSize(window, &width, &height);
 
-	logo->SetWorldLocation({ width / 2.f, height / 2.f, 0 });
+	logo->SetWorldLocation({ width / 2.f, height / 2.f });
 	logo->GetComponent<TextureComponent>()->m_bIsCenteredAtPosition = true;
 	scene.Add(logo);
 
@@ -376,8 +381,8 @@ void LoadFpsCounterScene()
 	SDL_Window* window = Renderer::GetInstance().GetSDLWindow();
 	int width, height;
 	SDL_GetWindowSize(window, &width, &height);
-	fpsCounter->SetWorldLocation({ width, 0, 0 });
-	fpsCounter->AddLocation({ -75, 5, 0 });
+	fpsCounter->SetWorldLocation({ width, 0.f });
+	fpsCounter->AddLocation({ -75.f, 5.f });
 
 	fpsScene.Add(fpsCounter);
 
@@ -450,4 +455,81 @@ void LoadTestSoundCommands()
 
 
 }
+
+
+void LoadLevel1()
+{
+	//*/
+	auto& scene = SceneManager::GetInstance().CreateScene("Level");
+
+	const auto resourcesPath = bae::ResourceManager::GetInstance().GetResourcesPath();
+	auto& lm = Game::Level::LevelManager::GetInstance();
+	lm.LoadLevel(resourcesPath / "Levels/Level_1.json");
+	lm.LoadLevel(resourcesPath / "Levels/Level_2.json");
+	lm.LoadLevel(resourcesPath / "Levels/Level_3.json");
+
+	lm.SetCurrentLevel(1);
+	//lm.SetCurrentLevel(2);
+	//lm.SetCurrentLevel(3);
+	lm.SpawnLevelInScene(scene);
+	//*/
+
+	Game::GameMode::GameModeManager::GetInstance().AddPlayer(1);
+
+
+	InputManager::GetInstance().AddController(0);
+	InputManager::GetInstance().AddController(1);
+
+	auto* myController = InputManager::GetInstance().GetController(1);
+	auto& keyboard = bae::InputManager::GetInstance().GetKeyboard();
+
+	auto pPlayer = lm.GetPlayer();
+
+	// move player 1 (controller)
+	auto moveCommand = std::make_unique<Game::Commands::TestMoveCommand>(*pPlayer, glm::vec2(0, 1), 200.f);
+	myController->AddControllerCommands(std::move(moveCommand), XINPUT_GAMEPAD_DPAD_DOWN, InputManager::ButtonState::Pressed);
+
+	moveCommand = std::make_unique<Game::Commands::TestMoveCommand>(*pPlayer, glm::vec2(0, -1), 200.f);
+	myController->AddControllerCommands(std::move(moveCommand), XINPUT_GAMEPAD_DPAD_UP, InputManager::ButtonState::Pressed);
+
+	moveCommand = std::make_unique<Game::Commands::TestMoveCommand>(*pPlayer, glm::vec2(-1, 0), 200.f);
+	myController->AddControllerCommands(std::move(moveCommand), XINPUT_GAMEPAD_DPAD_LEFT, InputManager::ButtonState::Pressed);
+
+	moveCommand = std::make_unique<Game::Commands::TestMoveCommand>(*pPlayer, glm::vec2(1, 0), 200.f);
+	myController->AddControllerCommands(std::move(moveCommand), XINPUT_GAMEPAD_DPAD_RIGHT, InputManager::ButtonState::Pressed);
+
+
+	//*/
+	// move player 2 (keyboard)
+	moveCommand = std::make_unique<Game::Commands::TestMoveCommand>(*pPlayer, glm::vec2(0, -1), 100.f);
+	keyboard.AddKeyboardCommands(std::move(moveCommand), SDLK_w, InputManager::ButtonState::Pressed);
+
+	moveCommand = std::make_unique<Game::Commands::TestMoveCommand>(*pPlayer, glm::vec2(0, 1), 100.f);
+	keyboard.AddKeyboardCommands(std::move(moveCommand), SDLK_s, InputManager::ButtonState::Pressed);
+
+	moveCommand = std::make_unique<Game::Commands::TestMoveCommand>(*pPlayer, glm::vec2(-1, 0), 100.f);
+	keyboard.AddKeyboardCommands(std::move(moveCommand), SDLK_a, InputManager::ButtonState::Pressed);
+
+	moveCommand = std::make_unique<Game::Commands::TestMoveCommand>(*pPlayer, glm::vec2(1, 0), 100.f);
+	keyboard.AddKeyboardCommands(std::move(moveCommand), SDLK_d, InputManager::ButtonState::Pressed);
+	//*/
+
+	/*/
+	// move player 2 (keyboard)
+	moveCommand = std::make_unique<Game::Commands::TestMoveCommand>(*nobbin, glm::vec2(0, -1), 100.f);
+	keyboard.AddKeyboardCommands(std::move(moveCommand), SDLK_w, InputManager::ButtonState::Pressed);
+
+	moveCommand = std::make_unique<Game::Commands::TestMoveCommand>(*nobbin, glm::vec2(0, 1), 100.f);
+	keyboard.AddKeyboardCommands(std::move(moveCommand), SDLK_s, InputManager::ButtonState::Pressed);
+
+	moveCommand = std::make_unique<Game::Commands::TestMoveCommand>(*nobbin, glm::vec2(-1, 0), 100.f);
+	keyboard.AddKeyboardCommands(std::move(moveCommand), SDLK_a, InputManager::ButtonState::Pressed);
+
+	moveCommand = std::make_unique<Game::Commands::TestMoveCommand>(*nobbin, glm::vec2(1, 0), 100.f);
+	keyboard.AddKeyboardCommands(std::move(moveCommand), SDLK_d, InputManager::ButtonState::Pressed);
+	//*/
+
+
+}
+
 

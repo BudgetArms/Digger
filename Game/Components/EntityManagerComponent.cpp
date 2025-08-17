@@ -4,29 +4,105 @@
 
 #include "Core/Utils.h"
 
+#include "../Base/LevelManager.h"
 #include "../Components/HitboxComponent.h"
 #include "../Components/PickupComponent.h"
 #include "../Entities/BonusComponent.h"
 #include "../Entities/DiggerComponent.h"
 #include "../Entities/NobbinComponent.h"
-#include "HealthComponent.h"
+#include "../Components/HealthComponent.h"
 
 
 using namespace Game::Components;
 
 
-EntityManagerComponent::EntityManagerComponent(bae::GameObject& owner, bae::Scene* currentScene) :
+EntityManagerComponent::EntityManagerComponent(bae::GameObject& owner, bae::Scene& currentScene) :
 	bae::Component(owner),
-	m_CurrentScene{ currentScene }
+	m_CurrentScene{ &currentScene },
+	m_SubjectEvents{}
 {
 }
 
 
 void EntityManagerComponent::LateUpdate()
 {
+
+
 	HandleCollisions();
+	HandleEvents();
 }
 
+void EntityManagerComponent::Notify(bae::EventType event, bae::Subject* subject)
+{
+	m_SubjectEvents.insert(std::pair(event, subject));
+
+}
+
+void EntityManagerComponent::RemoveAllPlayers()
+{
+
+	for (auto& uObject : m_CurrentScene->GetObjects())
+	{
+		if (!uObject)
+			continue;
+
+		if (uObject->HasComponent<Game::Entities::DiggerComponent>())
+			uObject->Destroy();
+
+	}
+
+}
+
+void EntityManagerComponent::RemoveAllNobbins()
+{
+
+	for (auto& uObject : m_CurrentScene->GetObjects())
+	{
+		if (!uObject)
+			continue;
+
+		if (uObject->HasComponent<Game::Entities::NobbinComponent>())
+			uObject->Destroy();
+
+	}
+
+}
+
+
+void EntityManagerComponent::HandleEvents()
+{
+	for (auto& [eventType, pSubject] : m_SubjectEvents)
+	{
+		switch (eventType)
+		{
+			case bae::EventType::LEVEL_STARTED:
+				break;
+			case bae::EventType::LEVEL_WON:
+				break;
+			case bae::EventType::LEVEL_LOST:
+				break;
+			case bae::EventType::PLAYER_HEALTH_CHANGE:
+				break;
+			case bae::EventType::PLAYER_SCORE_CHANGE:
+				break;
+			case bae::EventType::PLAYER_DIED:
+			{
+				RemoveAllNobbins();
+				RemoveAllPlayers();
+				Game::Level::LevelManager::GetInstance().ReloadLevel();
+
+			}
+			break;
+			default:
+				break;
+		}
+
+
+	}
+
+	m_SubjectEvents.clear();
+
+}
 
 void EntityManagerComponent::HandleCollisions()
 {

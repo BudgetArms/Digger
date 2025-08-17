@@ -26,8 +26,6 @@ DiggerComponent::DiggerComponent(bae::GameObject& owner) :
 	m_Owner->AddComponent<bae::SpriteComponent>(*m_Owner, "Textures/SpriteSheet.png",
 		SDL_Rect(0, 0, 584, 128), 12, 48, glm::ivec2{ 8, 8 });
 
-
-
 	m_Owner->AddComponent<Game::Components::ScoreComponent>(*m_Owner);
 	auto pScoreComp = m_Owner->GetComponent<Game::Components::ScoreComponent>();
 
@@ -40,6 +38,7 @@ DiggerComponent::DiggerComponent(bae::GameObject& owner) :
 	m_Owner->AddComponent<Game::Components::HitboxComponent>(*m_Owner, 17, 17);
 	//m_Owner->GetComponent<Game::Components::HitboxComponent>()->m_bRenderHitbox = true;
 
+	m_Owner->SetWorldScale({ 3.f, 3.f });
 }
 
 

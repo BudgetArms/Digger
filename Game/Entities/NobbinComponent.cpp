@@ -1,11 +1,14 @@
 ﻿#include "NobbinComponent.h"
 
 #include "Core/Utils.h"
+#include "Singletons/GameTime.h"
 #include "Components/SpriteComponent.h"
 
 #include "../Components/HealthComponent.h"
 #include "../Components/HitboxComponent.h"
+#include "../Components/HitboxComponent.h"
 #include "../Components/AIComponent.h"
+#include "../Base/LevelManager.h"
 
 
 using namespace Game::Entities;
@@ -21,40 +24,63 @@ NobbinComponent::NobbinComponent(bae::GameObject& owner) :
 
 	m_Owner->AddComponent<Game::Components::AIComponent>(*m_Owner);
 
+
 	m_Owner->AddComponent<Game::Components::HitboxComponent>(*m_Owner, 17, 17);
 	//m_Owner->GetComponent<Game::Components::HitboxComponent>()->m_bRenderHitbox = true;
 
+	m_Owner->SetWorldScale({ 3.f, 3.f });
+
+
+	m_SpriteComp = m_Owner->GetComponent<bae::SpriteComponent>();
+
+	auto& lm = Game::Level::LevelManager::GetInstance();
+	m_Player = lm.GetPlayer();
+
+	auto aiComp = m_Owner->GetComponent<Game::Components::AIComponent>();
+	aiComp->m_TerrainGridGraph = lm.GetGridComponent()->GetTerrainGridGraph();
+	aiComp->m_Speed = 70.f;
 }
 
 
 void NobbinComponent::Update()
 {
+	auto aiComp = m_Owner->GetComponent<Game::Components::AIComponent>();
+	if (!aiComp || !m_Player)
+		return;
+
+	m_DelayMovingElapsedSec += bae::GameTime::GetInstance().GetDeltaTime();
+	if (!m_bStartedMoving && m_DelayMovingElapsedSec >= m_DelayStartMoving)
+	{
+		m_bStartedMoving = true;
+		aiComp->SetPath(m_Player);
+	}
+
+	m_AnimationElapsedSec += bae::GameTime::GetInstance().GetDeltaTime();
+	if (m_AnimationElapsedSec >= m_AnimationDelay)
+	{
+		m_AnimationElapsedSec = 0.f;
+		SwitchAnimation();
+	}
+
 
 }
 
-void NobbinComponent::Render() const
+void NobbinComponent::ChangeSpeed(float speed)
 {
-	//const auto& pos = m_Owner->GetWorldLocation();
-	//const auto& scale = m_Owner->GetWorldScale();
+	auto aiComp = m_Owner->GetComponent<Game::Components::AIComponent>();
+	if (!aiComp || !m_Player)
+		return;
 
-	//bu::FillEllipse({ pos.x, pos.y }, static_cast<int>(2 * scale.x), static_cast<int>(2 * scale.y), { bu::Color::Green, 0.75f });
+	aiComp->m_Speed = speed;
+}
 
-
-	//if (auto* pSpriteComp = m_Owner->GetComponent<bae::SpriteComponent>())
-	{
-		//pSpriteComp->Render();
-
-		/*
-		m_Owner->AddLocation({ 200, 0, 0 });
-		pSpriteComp->NextSprite();
-
-		pSpriteComp->Render();
-		m_Owner->AddLocation({ -200, 0, 0 });
-		pSpriteComp->PreviousSprite();
-		*/
+void NobbinComponent::SwitchAnimation()
+{
+	m_SpriteComp->NextSprite();
+	if (m_SpriteComp->m_Index > static_cast<int>(NobbinSprites::LooksUpRight))
+		m_SpriteComp->m_Index = 0;
 
 
-	}
 }
 
 

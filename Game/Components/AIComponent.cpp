@@ -18,37 +18,47 @@ AIComponent::AIComponent(bae::GameObject& owner) :
 {
 }
 
-/*/
-AIComponent::~AIComponent()
-{
-
-
-}
-//*/
-
 
 void AIComponent::Update()
 {
-	if (m_CurrentIndex >= m_Path.size())
+	if (!m_bHasTarget)
 		return;
+
+	if (m_bNeedsUpdate)
+	{
+		m_bNeedsUpdate = false;
+		UpdatePath();
+	}
+
+	if (m_CurrentIndex == 2 && std::holds_alternative<bae::GameObject*>(m_Target))
+		UpdatePath();
+
+	if (m_CurrentIndex >= m_Path.size())
+	{
+		UpdatePath();
+		return;
+	}
 
 	bae::Graphs::GraphNode* targetNode = m_Path[m_CurrentIndex];
 	glm::vec2 targetPos = targetNode->GetPosition();
 
-	glm::vec2 pos = { m_Owner->GetWorldLocation().x, m_Owner->GetWorldLocation().y };
-	glm::vec2 dir = targetPos - pos;
-	float dist = glm::length(dir);
+	glm::vec2 position = m_Owner->GetWorldLocation();
+	glm::vec2 dir = targetPos - position;
+	const float distance = glm::length(dir);
 
-	if (dist < 0.1f)
+
+	if (distance < 1.f)
 	{
 		++m_CurrentIndex;
 		return;
 	}
 
-	dir /= dist;
-	pos += dir * 100.f * bae::GameTime::GetInstance().GetDeltaTime();
+	dir /= distance;
+	position += dir * m_Speed * bae::GameTime::GetInstance().GetDeltaTime();
 
-	m_Owner->SetWorldLocation({ pos.x, pos.y, 0 });
+	m_Owner->SetWorldLocation(position);
+
+
 }
 
 void AIComponent::Render() const
@@ -66,10 +76,42 @@ void AIComponent::SetPath(const glm::vec2& position)
 	if (!m_TerrainGridGraph)
 		return;
 
-	const glm::vec3 startPos = m_Owner->GetWorldLocation();
+	m_Target = position;
+	m_bNeedsUpdate = true;
+	m_bHasTarget = true;
+}
 
-	bae::Graphs::GraphNode* pStartNode = m_TerrainGridGraph->GetNodeAtPosition({ startPos.x, startPos.y });
-	bae::Graphs::GraphNode* pEndNode = m_TerrainGridGraph->GetNodeAtPosition(position);
+void AIComponent::SetPath(bae::GameObject* target)
+{
+	if (!m_TerrainGridGraph)
+		return;
+
+	m_Target = target;
+	m_bNeedsUpdate = true;
+	m_bHasTarget = true;
+}
+
+
+void AIComponent::UpdatePath()
+{
+	if (!m_TerrainGridGraph)
+		return;
+
+	const glm::vec2 startPos = m_Owner->GetWorldLocation();
+
+	bae::Graphs::GraphNode* pStartNode = m_TerrainGridGraph->GetNodeAtPosition(startPos);
+	bae::Graphs::GraphNode* pEndNode{};
+
+	if (auto targetPos = std::get_if<glm::vec2>(&m_Target))
+	{
+		pEndNode = m_TerrainGridGraph->GetNodeAtPosition(*targetPos);
+	}
+	else if (auto target = std::get_if<bae::GameObject*>(&m_Target))
+	{
+		if (*target)
+			pEndNode = m_TerrainGridGraph->GetNodeAtPosition((*target)->GetWorldLocation());
+	}
+
 
 	if (!pStartNode || !pEndNode)
 	{
@@ -80,8 +122,6 @@ void AIComponent::SetPath(const glm::vec2& position)
 	auto pathFinder = bae::Graphs::AStar(m_TerrainGridGraph, bae::Graphs::HeuristicFunctions::Chebyshev);
 	m_Path = pathFinder.FindPath(pStartNode, pEndNode);
 	m_CurrentIndex = 0;
-
-
 
 }
 

@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #include "Components/Component.h"
+#include "Components/SpriteComponent.h"
 
 
 namespace Game::Entities
@@ -12,7 +13,25 @@ namespace Game::Entities
 
 
 		void Update() override;
-		void Render() const override;
+
+
+		void ChangeSpeed(float speed);
+
+
+	private:
+		void SwitchAnimation();
+
+		bae::GameObject* m_Player;
+		bae::SpriteComponent* m_SpriteComp;
+
+
+		float m_DelayMovingElapsedSec{};
+		const float m_DelayStartMoving{ 2.f };
+
+		float m_AnimationElapsedSec{};
+		float m_AnimationDelay{ 0.2f };
+
+		bool m_bStartedMoving{};
 
 
 	};

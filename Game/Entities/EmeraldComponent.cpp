@@ -21,6 +21,7 @@ EmeraldComponent::EmeraldComponent(bae::GameObject& owner) :
 
 	m_Owner->AddComponent<Game::Components::PickupComponent>(*m_Owner, 100);
 
+	m_Owner->SetWorldScale({ 3.f, 3.f });
 }
 
 

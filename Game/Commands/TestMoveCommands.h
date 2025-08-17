@@ -30,7 +30,7 @@ namespace Game::Commands
 			if (!transform)
 				return;
 
-			transform->AddLocation({ m_Speed * m_Direction * bae::GameTime::GetInstance().GetDeltaTime(), 0 });
+			transform->AddLocation({ m_Speed * m_Direction * bae::GameTime::GetInstance().GetDeltaTime() });
 		}
 
 

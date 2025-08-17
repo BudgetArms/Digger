@@ -18,6 +18,7 @@ GoldBagComponent::GoldBagComponent(bae::GameObject& owner) :
 	m_Owner->AddComponent<Game::Components::HitboxComponent>(*m_Owner, 17, 17);
 	//m_Owner->GetComponent<Game::Components::HitboxComponent>()->m_bRenderHitbox = true;
 
+	m_Owner->SetWorldScale({ 3.f, 3.f });
 }
 
 
