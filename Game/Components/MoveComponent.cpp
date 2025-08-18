@@ -11,8 +11,7 @@ using namespace Game::Components;
 
 MoveComponent::MoveComponent(bae::GameObject& owner, float speed) :
 	bae::Component(owner),
-	m_Speed{ speed },
-	m_PreviousDirection{}
+	m_Speed{ speed }
 {
 	auto gridComp = Game::Managers::LevelManager::GetInstance().GetGridComponent();
 	m_TerrainGridGraph = gridComp->GetTerrainGridGraph();
@@ -24,38 +23,20 @@ MoveComponent::MoveComponent(bae::GameObject& owner, float speed) :
 
 void MoveComponent::Update()
 {
-
+	m_bMoved = false;
 
 }
 
 void MoveComponent::MoveInDirection(Game::Direction direction)
 {
+	if (m_bMoved)
+		return;
+	m_bMoved = true;
+
+
 	const auto& position = m_Owner->GetWorldLocation();
 	const glm::ivec2 gridRowColum = m_TerrainGridGraph->GetRowAndColumn(position);
 
-	if (IsAtGridPosition())
-	{
-		// on left edge
-		if (gridRowColum.y == 0 && (direction == Game::Direction::Left && m_PreviousDirection == Game::Direction::Left))
-			return;
-
-		// on top edge
-		if (gridRowColum.x == 0 && (direction == Game::Direction::Up && m_PreviousDirection == Game::Direction::Up))
-			return;
-
-		// on right edge
-		if (gridRowColum.r == m_Columns - 1 && (direction == Game::Direction::Right && m_PreviousDirection == Game::Direction::Right))
-			return;
-
-		// on bottom edge
-		if (gridRowColum.x == m_Rows - 1 && (direction == Game::Direction::Down && m_PreviousDirection == Game::Direction::Down))
-			return;
-
-
-		m_PreviousDirection = direction;
-		m_Owner->AddLocation({ m_Speed * Game::DirectionToVec(m_PreviousDirection) * bae::GameTime::GetInstance().GetDeltaTime() });
-		return;
-	}
 
 	// going left/right
 	if (m_PreviousDirection == Game::Direction::Left || m_PreviousDirection == Game::Direction::Right)
@@ -73,6 +54,31 @@ void MoveComponent::MoveInDirection(Game::Direction direction)
 				m_PreviousDirection = direction;
 
 	}
+
+
+	if (IsAtGridPosition())
+	{
+		m_PreviousDirection = Game::Direction::Nothing;
+
+		// on left edge
+		if ((gridRowColum.y == 0) && (direction == Game::Direction::Left))
+			return;
+
+		// on top edge
+		if ((gridRowColum.x == 0) && (direction == Game::Direction::Up))
+			return;
+
+		// on right edge
+		if ((gridRowColum.y == m_Columns - 1) && (direction == Game::Direction::Right))
+			return;
+
+		// on bottom edge
+		if ((gridRowColum.x == m_Rows - 1) && (direction == Game::Direction::Down))
+			return;
+
+		m_PreviousDirection = direction;
+	}
+
 
 	m_Owner->AddLocation({ m_Speed * Game::DirectionToVec(m_PreviousDirection) * bae::GameTime::GetInstance().GetDeltaTime() });
 

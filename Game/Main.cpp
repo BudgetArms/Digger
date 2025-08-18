@@ -184,7 +184,7 @@ void Start()
 	//LoadDefaultScene();
 	//LoadStartScene();
 	LoadFpsCounterScene();
-	LoadTestSoundCommands();
+	//LoadTestSoundCommands();
 	LoadLevel();
 
 	/*/
@@ -403,7 +403,7 @@ void LoadTestSoundCommands()
 
 	// Play & Pause Immediately after
 	auto activeSoundId = soundSystem->Play(gs::GetSoundId(gs::SoundEvents::PlayerDeathLong), 1);
-	//soundSystem->Pause(activeSoundId);
+	soundSystem->Pause(activeSoundId);
 
 
 	// Sound Commands:
@@ -420,8 +420,8 @@ void LoadTestSoundCommands()
 	keyboard.AddKeyboardCommands(std::move(soundCommands), SDLK_2, bae::InputManager::ButtonState::Down);
 
 	// ToggleMute
-	//soundCommands = std::make_unique<gs::TestSoundCommand>(gs::TestSoundEvents::ToggleMute, activeSoundId);
-	//keyboard.AddKeyboardCommands(std::move(soundCommands), SDLK_3, bae::InputManager::ButtonState::Down);
+	soundCommands = std::make_unique<gs::TestSoundCommand>(gs::TestSoundEvents::ToggleMute, activeSoundId);
+	keyboard.AddKeyboardCommands(std::move(soundCommands), SDLK_3, bae::InputManager::ButtonState::Down);
 
 
 	// Change Volume
@@ -480,8 +480,8 @@ void LoadLevel()
 	const auto resourcesPath = bae::ResourceManager::GetInstance().GetResourcesPath();
 	auto& lm = Game::Managers::LevelManager::GetInstance();
 	lm.LoadLevel(resourcesPath / "Levels/Level_1.json");
-	lm.LoadLevel(resourcesPath / "Levels/Level_2.json");
-	lm.LoadLevel(resourcesPath / "Levels/Level_3.json");
+	//lm.LoadLevel(resourcesPath / "Levels/Level_2.json");
+	//lm.LoadLevel(resourcesPath / "Levels/Level_3.json");
 
 	lm.SetScene(scene);
 	lm.SetCurrentLevel(1);
@@ -489,18 +489,19 @@ void LoadLevel()
 	lm.SetCurrentLevel(3);
 
 	lm.SetCurrentLevel(1);
-	lm.SetCurrentLevel(2);
 	lm.SpawnLevel();
 
 
 	InputManager::GetInstance().AddController(0);
 	InputManager::GetInstance().AddController(1);
 
-	auto* myController = InputManager::GetInstance().GetController(1);
-	auto& keyboard = bae::InputManager::GetInstance().GetKeyboard();
+	//auto* myController = InputManager::GetInstance().GetController(1);
+	//auto& keyboard = bae::InputManager::GetInstance().GetKeyboard();
 
 	auto pPlayer = lm.GetPlayer();
-	pPlayer->AddComponent<Game::Components::MoveComponent>(*pPlayer, 100.f);
+	if (!pPlayer)
+		return;
+
 
 
 	// move player 1 (controller)
@@ -518,6 +519,7 @@ void LoadLevel()
 	moveCommand = std::make_unique<Game::Commands::TestMoveCommand>(*pPlayer, glm::vec2(1, 0), 200.f);
 	myController->AddControllerCommands(std::move(moveCommand), XINPUT_GAMEPAD_DPAD_RIGHT, InputManager::ButtonState::Pressed);
 	//*/
+	/*/
 
 	auto realMoveCommand = std::make_unique<Game::Commands::MoveCommand>(*pPlayer, Game::Direction::Up);
 	myController->AddControllerCommands(std::move(realMoveCommand), XINPUT_GAMEPAD_DPAD_UP, InputManager::ButtonState::Pressed);
@@ -548,6 +550,7 @@ void LoadLevel()
 	myController->AddControllerCommands(std::move(realMoveCommand), XINPUT_GAMEPAD_DPAD_RIGHT, InputManager::ButtonState::Pressed);
 
 
+	/*/
 	/*/
 	// move player 2 (keyboard)
 	moveCommand = std::make_unique<Game::Commands::TestMoveCommand>(*pPlayer, glm::vec2(0, -1), 100.f);

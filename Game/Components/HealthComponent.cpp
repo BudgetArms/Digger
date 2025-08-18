@@ -33,6 +33,9 @@ void HealthComponent::Damage(float damage)
 		NotifyObservers(bae::EventType::PLAYER_DIED);
 		std::cout << "player died\n";
 		auto player = Game::Managers::LevelManager::GetInstance().GetPlayer();
+		if (!player)
+			return;
+
 		auto playerComp = player->GetComponent<Game::Entities::DiggerComponent>();
 		playerComp->PlayerDead();
 		return;

@@ -18,7 +18,7 @@ namespace Game::Components
 		void Update() override;
 
 
-		float GetSpeed() { return m_Speed; }
+		float GetSpeed() const { return m_Speed; }
 		void SetSpeed(float speed) { m_Speed = speed; }
 		void MoveInDirection(Game::Direction direction);
 
@@ -35,12 +35,14 @@ namespace Game::Components
 
 		Game::AI::TerrainGridGraph* m_TerrainGridGraph;
 
-		Game::Direction m_PreviousDirection;
+		Game::Direction m_PreviousDirection{ Game::Direction::Nothing };
 
 		glm::vec2 m_GridPosition;
 		glm::ivec2 m_GridCellSize;
 		int m_Columns;
 		int m_Rows;
+
+		bool m_bMoved{ false };
 
 
 	};

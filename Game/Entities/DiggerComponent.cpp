@@ -18,6 +18,7 @@
 #include "../States/DiggerNormalState.h"
 #include "../Commands/TestSoundCommands.h"
 #include "../Commands/SkipLevelCommand.h"
+#include "../Commands/MoveCommand.h"
 #include "../States/DiggerDeathState.h"
 
 
@@ -42,6 +43,7 @@ DiggerComponent::DiggerComponent(bae::GameObject& owner) :
 	m_TextTexture->SetText(std::to_string(pScoreComp->GetScore()));
 	m_TextTexture->m_Position = { 100, 20 };
 
+	m_Owner->AddComponent<Game::Components::MoveComponent>(*m_Owner, 100.f);
 
 	m_Owner->AddComponent<Game::Components::HitboxComponent>(*m_Owner, 17, 17);
 	//m_Owner->GetComponent<Game::Components::HitboxComponent>()->m_bRenderHitbox = true;
@@ -56,20 +58,58 @@ DiggerComponent::DiggerComponent(bae::GameObject& owner) :
 	auto& im = bae::InputManager::GetInstance();
 	im.ClearCommands();
 
+	//*
 	bae::SoundEventData eventData
 	{
-		.Type = bae::SoundEventType::StopAll
+		.Type = bae::SoundEventType::Play
+		//.Type = bae::SoundEventType::StopAll
 	};
 
 	bae::ServiceLocator::GetAudioQueue().SendSoundEvent(eventData);
+	//*/
+
 
 	auto& keyboard = im.GetKeyboard();
+	auto controller = im.GetController(0);
 
+
+	//Move Command
+	auto moveCommand = std::make_unique<Game::Commands::MoveCommand>(*m_Owner, Game::Direction::Up);
+	keyboard.AddKeyboardCommands(std::move(moveCommand), SDLK_w, bae::InputManager::ButtonState::Pressed);
+
+	moveCommand = std::make_unique<Game::Commands::MoveCommand>(*m_Owner, Game::Direction::Down);
+	keyboard.AddKeyboardCommands(std::move(moveCommand), SDLK_s, bae::InputManager::ButtonState::Pressed);
+
+	moveCommand = std::make_unique<Game::Commands::MoveCommand>(*m_Owner, Game::Direction::Left);
+	keyboard.AddKeyboardCommands(std::move(moveCommand), SDLK_a, bae::InputManager::ButtonState::Pressed);
+
+	moveCommand = std::make_unique<Game::Commands::MoveCommand>(*m_Owner, Game::Direction::Right);
+	keyboard.AddKeyboardCommands(std::move(moveCommand), SDLK_d, bae::InputManager::ButtonState::Pressed);
+
+
+	moveCommand = std::make_unique<Game::Commands::MoveCommand>(*m_Owner, Game::Direction::Up);
+	controller->AddControllerCommands(std::move(moveCommand), XINPUT_GAMEPAD_DPAD_UP, bae::InputManager::ButtonState::Pressed);
+
+	moveCommand = std::make_unique<Game::Commands::MoveCommand>(*m_Owner, Game::Direction::Down);
+	keyboard.AddKeyboardCommands(std::move(moveCommand), XINPUT_GAMEPAD_DPAD_DOWN, bae::InputManager::ButtonState::Pressed);
+
+	moveCommand = std::make_unique<Game::Commands::MoveCommand>(*m_Owner, Game::Direction::Left);
+	controller->AddControllerCommands(std::move(moveCommand), XINPUT_GAMEPAD_DPAD_LEFT, bae::InputManager::ButtonState::Pressed);
+
+	moveCommand = std::make_unique<Game::Commands::MoveCommand>(*m_Owner, Game::Direction::Right);
+	controller->AddControllerCommands(std::move(moveCommand), XINPUT_GAMEPAD_DPAD_RIGHT, bae::InputManager::ButtonState::Pressed);
+
+
+
+
+	// Toggle Mute And Skip
 	auto soundCommand = std::make_unique<Game::Sounds::TestSoundCommand>(Game::Sounds::TestSoundEvents::ToggleMuteAll);
 	keyboard.AddKeyboardCommands(std::move(soundCommand), SDLK_F2, bae::InputManager::ButtonState::Down);
 
 	auto skipCommand = std::make_unique<Game::Commands::SkipLevelCommand>();
 	keyboard.AddKeyboardCommands(std::move(skipCommand), SDLK_F1, bae::InputManager::ButtonState::Down);
+
+	//*/
 
 	//*/
 
@@ -106,7 +146,6 @@ void DiggerComponent::Render() const
 }
 
 void Game::Entities::DiggerComponent::SetState(std::unique_ptr<Game::States::DiggerState> newState)
-//void Game::Entities::DiggerComponent::SetState(std::unique_ptr<Game::States::DiggerState>)
 {
 	if (m_State)
 		m_State->OnExit();
@@ -115,7 +154,6 @@ void Game::Entities::DiggerComponent::SetState(std::unique_ptr<Game::States::Dig
 
 	if (m_State)
 		m_State->OnEnter(*m_Owner);
-
 
 }
 

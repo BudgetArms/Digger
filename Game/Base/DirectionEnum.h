@@ -10,7 +10,8 @@ namespace Game
 		Left,
 		Right,
 		Up,
-		Down
+		Down,
+		Nothing // for moveCommand
 	};
 
 	constexpr glm::vec2 DirectionToVec(Direction direction)
@@ -28,6 +29,9 @@ namespace Game
 				break;
 			case Game::Direction::Down:
 				return { 0, 1 };
+				break;
+			case Game::Direction::Nothing:
+				return { 0, 0 };
 				break;
 		}
 
